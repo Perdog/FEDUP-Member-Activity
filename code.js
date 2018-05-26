@@ -121,7 +121,8 @@ function fetchPublicLoad() {
 	loginData.corp_id = data.corporation_id;
 	localStorage.loginData = JSON.stringify(loginData);
 	console.log("Retrived all data, reloading page");
-	location = location.href.split('?')[0];
+	if (location.search)
+		location = location.href.split('?')[0];
 }
 
 function fetchPublicError(err) {
