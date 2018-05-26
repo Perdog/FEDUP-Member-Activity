@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.18.1/vis.min.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+	<link rel="stylesheet" href="./bootstrap.css">
+	
+	<style>
+		ul {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+			background-color: #333;
+		}
+		
+		li p {
+			display: inline-block;
+			color: white;
+			text-align: center;
+			padding: 14px 16px;
+			text-decoration: none;
+		}
+		
+		li img {
+			display: inline-block;
+			color: white;
+			text-align: center;
+			padding: 14px 16px;
+			text-decoration: none;
+		}
+		
+		table {
+			border: 1px solid white;
+			width:100%;
+		}
+		
+		th, td {
+			text-align: center;
+			border-bottom: 1px solid gray;
+		}
+		
+		.dynamic-content {
+			display: none;
+		}
+		
+		.row {
+			display: flex;
+			flex: 100%;
+			margin: 0%;
+		}
+		
+		.sidebar {
+			flex: 12%;
+		}
+		
+		.column {
+			flex: 32%;
+			text-align: center;
+		}
+		
+		.center-content {
+			flex: 76%;
+			text-align: center;
+		}
+		
+		.titles {
+			text-align: center;
+		}
+		.form-control {
+			width: 100%;
+			text-align: center;
+		}
+		
+		/* Style the button that is used to open and close the collapsible content */
+		.collapsible {
+			background-color: #eee;
+			color: #444;
+			cursor: pointer;
+			padding: 18px;
+			width: 100%;
+			border: none;
+			text-align: left;
+			outline: none;
+			font-size: 15px;
+		}
+		
+		/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+		.collapsible:hover {
+			background-color: #ccc;
+		}
+		.collapsible:after {
+			content: '\02795'; /* Unicode character for "plus" sign (+) */
+			font-size: 13px;
+			color: white;
+			float: right;
+			margin-left: 5px;
+		}
+		
+		.active:after {
+			content: "\2796"; /* Unicode character for "minus" sign (-) */
+		}
+		
+		/* Style the collapsible content. Note: hidden by default */
+		.content {
+			padding: 0 4px;
+			max-height: 0;
+			overflow: hidden;
+			transition: max-height 0.2s ease-out;
+		}
+		
+		
+		#please-login {
+			text-align: center;
+			position: absolute;
+			width: 300px;
+			height: 100px;
+			z-index: 15;
+			top: 50%;
+			left: 50%;
+			margin: -100px 0 0 -150px;
+		}
+	</style>
+</head>
+<body>
+	<ul id="header-bar">
+		<li style="float:left"><img src="/FEDUP text.png" style="width:150px"></img></li>
+		<li style="float:left"><img id="corp-logo" class="dynamic-content" src="" style="width:68px"></img></li>
+		<!--<li style="float:left"><p style="text-align:center" id="server-status">Server status: Unknown --- Players online: Unknown</p></li>-->
+		<li style="float:right">
+			<div id="as" class="dynamic-content">
+				<img src=""></img>
+				<a id="logged-name">Logged in as: No one</a>
+				<a id="timer">...</a>
+				<button id="logout" style="color:black">Log out</button>
+			</div>
+		</li>
+		<li style="float:right">
+			<a id="login" class="dynamic-content" href="https://login.eveonline.com/oauth/authorize?response_type=token&redirect_uri=http://localhost:50100/index.html?callback&client_id=d39d34e683aa48c2b535b099c3dc404a&scope=publicData esi-corporations.read_corporation_membership.v1 esi-characters.read_corporation_roles.v1 esi-corporations.track_members.v1 esi-corporations.read_titles.v1 esi-corporations.read_fw_stats.v1&state=membertracker">
+				<img src="https://web.ccpgamescdn.com/eveonlineassets/developers/eve-sso-login-white-small.png"></img>
+			</a>
+		</li>
+	</ul>
+		
+	<div id="please-login" class="dynamic-content">
+		<img src="/FEDUP Logo.png" style="width:128px;height:128px"></img>
+		<br />
+		<a>
+			Please log into your FEDUP toon. Your toon requires Director roles in order to properly utilize this tool.
+		</a>
+	</div>
+	
+	<div id="logged-in" class="dynamic-content">
+		<div class="row">
+			<div class="sidebar"></div>
+			
+			<div class="center-content">
+				<div class="row">
+					<div class="column">
+						<a id="limited-features" class="dynamic-content" style="text-align:center;color:yellow">Character logged in does not have Director roles. Some features of this site will not work.</a>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="column">
+						<a id="inactive-members" class="dynamic-content" style="text-align:center">
+							Testing testing read all about it
+						</a>
+						<table>
+							<tbody id="inactive-table" class="dynamic-content">
+									<th>Name</th>
+									<th>Joined</th>
+									<th>Last online</th>
+									<th>Days since</th>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="column">
+						<a id="low-participation" class="dynamic-content" style="text-align:center">Testing testing read all about it</a>
+					</div>
+				</div>
+			</div>
+			
+			<div class="sidebar"></div>
+		</div>
+	</div>
+	
+	<script>
+	var coll = document.getElementsByClassName("collapsible");
+	var i;
+
+	for (i = 0; i < coll.length; i++) {
+		coll[i].addEventListener("click", function() {
+			this.classList.toggle("active");
+			var content = this.nextElementSibling;
+			if (content.style.maxHeight){
+				content.style.maxHeight = null;
+			} else {
+				content.style.maxHeight = content.scrollHeight + "px";
+			}
+		});
+	}
+	</script>
+	
+	
+	<!-- Latest compiled and minified JQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<!-- Latest compiled and minified Bootstrap -->
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+	<script type="text/javascript" src="code.js"></script>
+	
+</body>
+
+</html>
