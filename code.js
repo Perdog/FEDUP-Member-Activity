@@ -37,6 +37,7 @@ $(document).ready(function() {
 		}
 		// Otherwise we're good to go. Let's load some thangs.
 		else {
+			fetchCharInfo();
 			$("#as").find("img").attr("src", "https://image.eveonline.com/Character/" + loginData.id + "_32.jpg");
 			$("#corp-logo").attr("src", "https://image.eveonline.com/Corporation/" + loginData.corp_id + "_128.png");
 			$("#logged-name").text("Logged in as " + loginData.name + ": ");
@@ -57,11 +58,13 @@ $(document).ready(function() {
 	}
 });
 
+// Show log in button and help text
 function showLogIn() {
 	$('#login').show();
 	$('#please-login').show();
 }
 
+// Fire XHR request for server data
 function serverStatus() {
 	var fetch = new XMLHttpRequest();
 	fetch.onload = serverStatusLoad;
@@ -70,16 +73,19 @@ function serverStatus() {
 	fetch.send();
 }
 
+// Catch server data response
 function serverStatusLoad() {
 	var data = JSON.parse(this.responseText);
 	var isOn = data.players > 0;
 	$('#server-status').text("Server is " + (isOn ? "online" : "offline") + " --- Players online: " + data.players);
 }
 
+// Catch server data errors
 function serverStatusError(err) {
 	$('#server-status').text("Error loading server status");
 }
 
+// Fire XHR for verifying a token
 function fetchCharInfo() {
 	var fetch = new XMLHttpRequest();
 	fetch.onload = charLoad;
@@ -89,8 +95,10 @@ function fetchCharInfo() {
 	fetch.send();
 }
 
+// Catch verify response
 function charLoad() {
 	var data = JSON.parse(this.responseText);
+	console.log(data);
 	loginData.name = data.CharacterName;
 	loginData.id = data.CharacterID;
 	localStorage.loginData = JSON.stringify(loginData);
@@ -103,6 +111,7 @@ function charLoad() {
 	fetch.send();
 }
 
+// Catch verify errors
 function charError(err) {
 	$('#as').find("a").text("Error loading character info");
 }
@@ -111,6 +120,7 @@ function fetchPublicLoad() {
 	var data = JSON.parse(this.responseText);
 	loginData.corp_id = data.corporation_id;
 	localStorage.loginData = JSON.stringify(loginData);
+	console.log("Retrived all data, reloading page");
 	location = location.href.split('?')[0];
 }
 
