@@ -291,13 +291,15 @@ function parseTimer(duration) {
 	var hours = parseInt((duration/(1000*60*60))%24);
 	var days = parseInt((duration/(1000*60*60*24))%30);
 	var months = parseInt((duration/(1000*60*60*24*30)%12));
+	var years = parseInt((duration/(1000*60*60*24*30*12)));
+	years = (years > 0) ? years + "y" : "";
 	months = (months > 0) ? months + "mo" : "";
 	days = (days > 0) ? days + "D" : "";
 	hours = (hours > 0) ? ((hours < 10) ? "0" + hours : hours) + "H" : "";
 	minutes = (minutes > 0) ? minutes + "M" : "";
 	seconds = ((seconds < 10) ? "0" + seconds : seconds);
 	
-	return ((months != "") ? months + ":" : "") + ((days != "") ? days + ":" : "") + ((hours != "") ? hours + ":" : "") + ((minutes != "") ? minutes + ":" : "" ) + seconds + "S";
+	return ((years != "") ? years + ":" : "") + ((months != "") ? months + ":" : "") + ((days != "") ? days + ":" : "") + ((hours != "") ? hours + ":" : "") + ((minutes != "") ? minutes + ":" : "" ) + seconds + "S";
 }
 
 function tickTimer() {
