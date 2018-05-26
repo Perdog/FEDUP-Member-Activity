@@ -100,6 +100,12 @@ function charLoad() {
 	console.log(data);
 	loginData.name = data.CharacterName;
 	loginData.id = data.CharacterID;
+	// DEBUG
+	loginData.tokenExpires = data.expiresOn;
+	/*
+	var ex = new Date(data.expiresOn);
+	loginData.expires = Date.now() + ex;
+	*/
 	localStorage.loginData = JSON.stringify(loginData);
 	
 	var fetch = new XMLHttpRequest();
