@@ -354,8 +354,8 @@ function sortTable() {
       shouldSwitch = false;
       /*Get the two elements you want to compare,
       one from current row and one from the next:*/
-      x = new Date(rows[i].getElementsByTagName("TD")[0]);
-      y = new Date(rows[i + 1].getElementsByTagName("TD")[0]);
+      x = (rows[i].getElementsByTagName("TD")[0]);
+      y = (rows[i + 1].getElementsByTagName("TD")[0]);
       //check if the two rows should switch place:
       if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
         //if so, mark as a switch and break the loop:
