@@ -38,18 +38,6 @@ $(document).ready(function() {
 		// Otherwise we're good to go. Let's load some thangs.
 		else {
 			fetchCharInfo();
-			$("#as").find("img").attr("src", "https://image.eveonline.com/Character/" + loginData.id + "_32.jpg");
-			$("#corp-logo").attr("src", "https://image.eveonline.com/Corporation/" + loginData.corp_id + "_128.png");
-			$("#logged-name").text("Logged in as " + loginData.name + ": ");
-			$("#as").show();
-			$("#corp-logo").show();
-			
-			setTimeout(tickTimer, 1000);
-			
-			if (loginData.has_roles == undefined)
-				checkRoles();
-			else
-				loadThingsOntoPage();
 		}
 	}
 	// Otherwise, we know they aren't logged in.
@@ -123,6 +111,20 @@ function fetchPublicLoad() {
 	console.log("Retrived all data, reloading page");
 	if (location.search)
 		location = location.href.split('?')[0];
+	else {
+		$("#as").find("img").attr("src", "https://image.eveonline.com/Character/" + loginData.id + "_32.jpg");
+		$("#corp-logo").attr("src", "https://image.eveonline.com/Corporation/" + loginData.corp_id + "_128.png");
+		$("#logged-name").text("Logged in as " + loginData.name + ": ");
+		$("#as").show();
+		$("#corp-logo").show();
+		
+		setTimeout(tickTimer, 1000);
+		
+		if (loginData.has_roles == undefined)
+			checkRoles();
+		else
+			loadThingsOntoPage();
+	}
 }
 
 function fetchPublicError(err) {
