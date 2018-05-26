@@ -357,7 +357,7 @@ function sortTable() {
       x = new Date(rows[i].getElementsByTagName("TD")[2]);
       y = new Date(rows[i + 1].getElementsByTagName("TD")[2]);
       //check if the two rows should switch place:
-      if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+      if (x > y) {
         //if so, mark as a switch and break the loop:
         shouldSwitch = true;
         break;
