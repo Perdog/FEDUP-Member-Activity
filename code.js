@@ -101,7 +101,7 @@ function charLoad() {
 	loginData.name = data.CharacterName;
 	loginData.id = data.CharacterID;
 	// DEBUG
-	loginData.tokenExpires = data.expiresOn;
+	loginData.tokenExpires = data.ExpiresOn;
 	/*
 	var ex = new Date(data.expiresOn);
 	loginData.expires = Date.now() + ex;
