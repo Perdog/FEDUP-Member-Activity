@@ -80,6 +80,7 @@ function fetchCharInfo() {
 	fetch.onerror = charError;
 	fetch.open('get', "https://esi.tech.ccp.is/verify/", true);
 	fetch.setRequestHeader("Authorization", "Bearer " + loginData.token);
+	fetch.setRequestHeader("cache-control", "no-cache");
 	fetch.send();
 }
 
