@@ -258,6 +258,10 @@ function lookupDone() {
 	var data = JSON.parse(this.responseText);
 	var tableText = "";
 	
+	data.sort(function(a,b) {
+		return a.character_name.toLowerCase() - b.character_name.toLowerCase();
+	});
+	
 	for (var i = 0; i < data.length; i++) {
 		//list[data[i].character_id].name = data[i].character_name;
 		var m = list[data[i].character_id];
@@ -271,7 +275,7 @@ function lookupDone() {
 	}
 	
 	$('#inactive-table').find('tbody').append(tableText);
-	sortTable();
+	//sortTable();
 	$('#inactive-table').show();
 	console.log(list);
 	
