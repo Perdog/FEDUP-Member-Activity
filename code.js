@@ -262,6 +262,7 @@ function lookupDone() {
 		//list[data[i].character_id].name = data[i].character_name;
 		var m = list[data[i].character_id];
 		tableText += 	"<tr>" + 
+						"<td>" + (i+1) + "</td>" +
 						"<td>" + data[i].character_name + "</td>" +
 						"<td>" + m.joined.toString().substring(3,15) + "</td>" +
 						"<td>" + m.last_on.toString().substring(3,15) + "</td>" +
