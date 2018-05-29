@@ -259,7 +259,14 @@ function lookupDone() {
 	var tableText = "";
 	
 	data.sort(function(a,b) {
-		return a.character_name.toLowerCase() - b.character_name.toLowerCase();
+		var aName = a.character_name.toLowerCase();
+		var bName = b.character_name.toLowerCase();
+		if (aName > bName)
+    			return 1;
+    		if (aName < bName)
+    			return -1;
+    		else
+    			return 0;
 	});
 	
 	for (var i = 0; i < data.length; i++) {
