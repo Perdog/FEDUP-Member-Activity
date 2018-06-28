@@ -5,6 +5,7 @@
 	<meta http-equiv="Cache-control" content="no-cache">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.18.1/vis.min.css" rel="stylesheet" type="text/css" />
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+	<!--<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">-->
 	<link rel="stylesheet" href="./bootstrap.css">
 	
 	<style>
@@ -14,6 +15,26 @@
 			padding: 0;
 			overflow: hidden;
 			background-color: #333;
+		}
+		
+		li {
+			float: left;
+		}
+		
+		div#nav-tabs li a {
+			display: inline-block;
+			color: white;
+			text-align: center;
+			padding: 14px 16px;
+			text-decoration: none;
+		}
+		
+		div#nav-tabs li a:hover:not(.active) {
+			background-color: #111;
+		}
+		
+		div#nav-tabs li.ui-tabs-active {
+			background-color: #4CAF50;
 		}
 		
 		li p {
@@ -156,6 +177,8 @@
 		</a>
 	</div>
 	
+	<br />
+	
 	<div id="logged-in" class="dynamic-content">
 		<div class="row">
 			<div class="sidebar"></div>
@@ -168,20 +191,50 @@
 				</div>
 				
 				<div class="row">
-					<div class="column">
-						<a id="inactive-members" class="dynamic-content" style="text-align:center">
-							Testing testing read all about it
-						</a>
-						<table id="inactive-table" class="dynamic-content">
-							<tbody>
-									<th></th>
-									<th>Name</th>
-									<th>Joined</th>
-									<th>Last online</th>
-									<th>Offline for</th>
-							</tbody>
-						</table>
+					<div class="row" id="nav-tabs">
+						
+						<div class="row">
+							<div class="column">
+								<ul>
+									<li>
+										<a href="#tabs-1">Purge</a>
+									</li>
+									<li>
+										<a href="#tabs-2">Killboard activity</a>
+									</li>
+									<li>
+										
+									</li>
+								</ul>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="column" id="tabs-1">
+								<table id="inactive-table">
+									<tbody>
+										<th></th>
+										<th>Name</th>
+										<th>Joined</th>
+										<th>Last online</th>
+										<th>Offline for</th>
+									</tbody>
+								</table>
+							</div>
+						
+							<div class="column" id="tabs-2">
+								<table id="killboard-activity">
+									<tbody>
+										<th>Name</th>
+										<th>All time kills in corp</th>
+										<th>Kills this month</th>
+										<th>Kills last month</th>
+									</tbody>
+								</table>
+							</div>
+						</div>
 					</div>
+					
 				</div>
 				
 				<div class="row">
@@ -214,7 +267,8 @@
 	
 	
 	<!-- Latest compiled and minified JQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	<script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
 	<!-- Latest compiled and minified Bootstrap -->
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
 	<script type="text/javascript" src="code.js"></script>

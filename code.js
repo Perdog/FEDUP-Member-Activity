@@ -1,5 +1,6 @@
 var loginData = null;
 var list = {};
+var kbdata = [];
 
 $('#logout').click(function() {
 	localStorage.removeItem("loginData");
@@ -9,6 +10,7 @@ $('#logout').click(function() {
 $(document).ready(function() {
 	// Load server status into header
 	//serverStatus();
+	$('#nav-tabs').tabs();
 	
 	// Do we have a search location
 	if (location.search) {
@@ -196,7 +198,6 @@ function loadThingsOntoPage() {
 function fetchInactiveMembers() {
 	var fetch = new XMLHttpRequest();
 	fetch.onload = loadInactiveMembers;
-	//fetch.onerror = charError;
 	fetch.open('get', "https://esi.evetech.net/latest/corporations/" + loginData.corp_id + "/membertracking/?datasource=tranquility", true);
 	fetch.setRequestHeader("Authorization", "Bearer " + loginData.token);
 	fetch.send();
@@ -204,6 +205,7 @@ function fetchInactiveMembers() {
 
 function loadInactiveMembers() {
 	var json = JSON.parse(this.responseText);
+	var allids = [];
 	var ids = [];
 	
 	if (json.error) {
@@ -218,43 +220,104 @@ function loadInactiveMembers() {
 		var lastLogin = new Date(breakDown[0]);
 		var joined = new Date(json[key].start_date.split("T")[0]);
 		
+		allids.push(json[key].character_id);
+		
 		if (lastLogin < cutoff) {
 			ids.push(json[key].character_id);
-			/*
-			var charName = getCharName(json[key].character_id)+"";
-			var temp = [charName, lastLogin, joined];
-			list.push(temp);
-			*/
 			var temp = {"last_on": lastLogin, "joined": joined};
 			list[json[key].character_id] = temp;
 		}
 	}
-	/*
-	if (list.length < 1) {
-		list.push(["Whoops", "No data"]);
+	
+	lookupKillboards(allids);
+	lookupCharIDs(ids);
+}
+
+function lookupKillboards(ids) {
+	statsMax = ids.length;
+	for (var i = 0; i < ids.length; i++) {
+		var fetch = new XMLHttpRequest();
+		fetch.onload = loadKillboards;
+		fetch.open('get', "https://zkillboard.com/api/stats/characterID/" + ids[i] + "/", true);
+		fetch.send();
+	}
+}
+
+var statsMax = 0;
+var statsLoaded = 0;
+function loadKillboards() {
+	var data = JSON.parse(this.responseText);
+	var date = new Date();
+	var thisMonth = Number(date.getFullYear() + "" + (date.getMonth()+1 < 10 ? "0"+(date.getMonth()+1) : date.getMonth()+1));
+	var lastMonth = Number(date.getFullYear() + "" + (date.getMonth() === 0 ? 12 : (date.getMonth() < 10 ? "0"+date.getMonth() : date.getMonth())));
+	
+	var allTime = "";
+	
+	var corpKills = data.topAllTime;
+	if (!corpKills) {
+		corpKills = {};
+		corpKills.data = [{kills: 0}];
+	} else {
+		corpKills = corpKills[1];
 	}
 	
-	list.sort(function(a,b) {
-		if(a[0].toUpperCase() > b[0].toUpperCase()) return 1;
-		else if (a[0].toUpperCase() < b[0].toUpperCase()) return -1;
-		else return 0;
-	});
-	*/
-	lookupCharIDs(ids);
+	var temp = 	{
+					name: (data.info ? data.info.name : "Unknown"),
+					all_time: corpKills.data[0].kills,
+					this_month: (data.months ? (data.months[thisMonth] ? (data.months[thisMonth].shipsDestroyed ? data.months[thisMonth].shipsDestroyed : 0) : 0) : 0),
+					last_month: (data.months ? (data.months[lastMonth] ? (data.months[lastMonth].shipsDestroyed ? data.months[lastMonth].shipsDestroyed : 0) : 0) : 0),
+				};
 	
-	//console.log(list);
+	kbdata.push(temp);
+	
+	statsLoaded++;
+	if (statsLoaded === statsMax)
+		showKillboard();
+}
+
+function showKillboard() {
+	kbdata.sort(function (a, b) {
+		if (a.this_month > b.this_month)
+			return 1;
+		else if (a.this_month < b.this_month)
+			return -1;
+		else {
+			if (a.all_time > b.all_time)
+				return 1;
+			else if (a.all_time < b.all_time)
+				return-1;
+			else {
+				if (a.name.toLowerCase() > b.name.toLowerCase())
+					return 1;
+				else if (a.name.toLowerCase() < b.name.toLowerCase())
+					return -1;
+			}
+			
+			return 0;
+		}
+	});
+	var killTable = "";
+	
+	for (var i = 0; i < kbdata.length; i++) {
+		killTable += 	"<tr>" +
+							"<td>" + kbdata[i].name + "</td>" +
+							"<td>" + kbdata[i].all_time + "</td>" +
+							"<td>" + kbdata[i].this_month + "</td>" +
+							"<td>" + kbdata[i].last_month + "</td>" +
+						"</tr>"
+	}
+	
+	$('#killboard-activity').append(killTable);
 }
 
 function lookupCharIDs(ids) {
 	var fetch = new XMLHttpRequest();
-	fetch.onload = lookupDone;
-	//fetch.onerror = rolesError;
+	fetch.onload = loadCharIDs;
 	fetch.open('post', "https://esi.evetech.net/latest/universe/names/?datasource=tranquility", true);
-	//fetch.setRequestHeader("Authorization", "Bearer " + loginData.token);
 	fetch.send(JSON.stringify(ids));
 }
 
-function lookupDone() {
+function loadCharIDs() {
 	var data = JSON.parse(this.responseText);
 	var tableText = "";
 	
@@ -287,10 +350,6 @@ function lookupDone() {
 	}
 	
 	$('#inactive-table').find('tbody').append(tableText);
-	//sortTable();
-	$('#inactive-table').show();
-	
-	
 }
 
 function parseSearch(variable) {
