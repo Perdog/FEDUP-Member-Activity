@@ -207,7 +207,7 @@ function loadInactiveMembers() {
 	var ids = [];
 	
 	if (json.error) {
-		console.log("Error doing membertracking stuff: ", json.error);
+		console.log("Error doing membertracking stuff: %1", json.error);
 		return;
 	}
 	
@@ -249,18 +249,23 @@ function lookupCharIDs(ids) {
 	var fetch = new XMLHttpRequest();
 	fetch.onload = lookupDone;
 	//fetch.onerror = rolesError;
-	fetch.open('get', "https://esi.evetech.net/latest/characters/names/?character_ids=" + ids.toString() + "&datasource=tranquility", true);
+	fetch.open('post', "https://esi.evetech.net/latest/universe/names/?datasource=tranquility", true);
 	//fetch.setRequestHeader("Authorization", "Bearer " + loginData.token);
-	fetch.send();
+	fetch.send(JSON.stringify(ids));
 }
 
 function lookupDone() {
 	var data = JSON.parse(this.responseText);
 	var tableText = "";
 	
+	if (data.error) {
+		console.log(data.error);
+		return;
+	}
+	
 	data.sort(function(a,b) {
-		var aName = a.character_name.toLowerCase();
-		var bName = b.character_name.toLowerCase();
+		var aName = a.name.toLowerCase();
+		var bName = b.name.toLowerCase();
 		if (aName > bName)
     			return 1;
     		if (aName < bName)
@@ -270,11 +275,11 @@ function lookupDone() {
 	});
 	
 	for (var i = 0; i < data.length; i++) {
-		//list[data[i].character_id].name = data[i].character_name;
-		var m = list[data[i].character_id];
+		//list[data[i].id].name = data[i].name;
+		var m = list[data[i].id];
 		tableText += 	"<tr>" + 
 						"<td>" + (i+1) + "</td>" +
-						"<td>" + data[i].character_name + "</td>" +
+						"<td>" + data[i].name + "</td>" +
 						"<td>" + m.joined.toString().substring(3,15) + "</td>" +
 						"<td>" + m.last_on.toString().substring(3,15) + "</td>" +
 						"<td>" + parseTimer(Date.now() - new Date(m.last_on)) + "</td>" +
@@ -284,7 +289,6 @@ function lookupDone() {
 	$('#inactive-table').find('tbody').append(tableText);
 	//sortTable();
 	$('#inactive-table').show();
-	console.log(list);
 	
 	
 }
