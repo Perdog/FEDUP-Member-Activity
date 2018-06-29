@@ -191,10 +191,32 @@ function loadThingsOntoPage() {
 			- Endpoint: https://esi.evetech.net/latest/corporations/<corpID>/members/titles/?datasource=tranquility
 			- List character titles along with their names
 	*/
-	
-	fetchInactiveMembers();
+	if (loginData.has_roles)
+		fetchInactiveMembers();
+	else
+		fetchMemberIDs();
 	
 	$('#logged-in').show();
+}
+
+function fetchMemberIDs() {
+	var fetch = new XMLHttpRequest();
+	fetch.onload = loadMemberIDs;
+	fetch.open('get', "https://esi.evetech.net/latest/corporations/" + loginData.corp_id + "/members/?datasource=tranquility", true);
+	fetch.setRequestHeader("Authorization", "Bearer " + loginData.token);
+	fetch.send();
+}
+
+function loadMemberIDs() {
+	var data = JSON.parse(this.responseText);
+	
+	if (data.error) {
+		console.log("Error loading member IDs: %1", json.error);
+		return;
+	}
+	$('#nav-tabs').tabs("option", "active", 1);
+	allIDs = data;
+	lookupKillboards();
 }
 
 function fetchInactiveMembers() {
@@ -209,7 +231,7 @@ function loadInactiveMembers() {
 	var json = JSON.parse(this.responseText);
 	
 	if (json.error) {
-		console.log("Error doing membertracking stuff: %1", json.error);
+		console.log("Error loading member info: %1", json.error);
 		return;
 	}
 	
@@ -274,9 +296,9 @@ function loadKillboards() {
 	var temp = 	{
 					id: id,
 					name: (data.info ? data.info.name : "Unknown"),
-					purge: (member.purge ? "Yes" : ""),
-					joined: member.joined,
-					last: member.last_on,
+					purge: (member ? (member.purge ? "Yes" : "") : ""),
+					joined: (member ? member.joined : ""),
+					last: (member ? member.last_on : ""),
 					all_time: corpKills.data[0].kills,
 					this_month_kills: (data.months ? (data.months[thisMonth] ? (data.months[thisMonth].shipsDestroyed ? data.months[thisMonth].shipsDestroyed : 0) : 0) : 0),
 					this_month_losses: (data.months ? (data.months[thisMonth] ? (data.months[thisMonth].shipsLost ? data.months[thisMonth].shipsLost : 0) : 0) : 0),
@@ -314,19 +336,25 @@ function showKillboard() {
 	});
 	var killTable = "";
 	
+	if (loginData.has_roles) {
+		killTable += "<tr><th>Name</th><th>Purge?</th><th>Join date</th><th>Last login</th><th>All time kills in corp</th><th>This month: Killes/Losses</th><th>Last month: Killes/Losses</th></tr>";
+	} else {
+		killTable += "<tr><th>Name</th><th>All time kills in corp</th><th>This month: Killes/Losses</th><th>Last month: Killes/Losses</th></tr>";
+	}
+	
 	for (var i = 0; i < kbdata.length; i++) {
 		killTable += 	"<tr>" +
 							"<td><a target=\"_blank\" href=\"https://zkillboard.com/character/"+kbdata[i].id+"/\">" + kbdata[i].name + "</a></td>" +
-							"<td>" + kbdata[i].purge + "</td>" +
-							"<td>" + kbdata[i].joined.toString().substring(3,15) + "</td>" +
-							"<td>" + kbdata[i].last.toString().substring(3,15) + "</td>" +
+							(loginData.has_roles ? ("<td>" + kbdata[i].purge + "</td>") : "") +
+							(loginData.has_roles ? ("<td>" + kbdata[i].joined.toString().substring(3,15) + "</td>") : "") +
+							(loginData.has_roles ? ("<td>" + kbdata[i].last.toString().substring(3,15) + "</td>") : "") +
 							"<td>" + kbdata[i].all_time + "</td>" +
 							"<td>" + kbdata[i].this_month_kills + "/" + kbdata[i].this_month_losses + "</td>" +
 							"<td>" + kbdata[i].last_month_kills + "/" + kbdata[i].last_month_losses + "</td>" +
 						"</tr>"
 	}
 	
-	$('#killboard-activity').append(killTable);
+	$('#killboard-activity').find('tbody').append(killTable);
 }
 
 function lookupCharIDs() {
@@ -368,6 +396,7 @@ function loadCharIDs() {
 						"</tr>";
 	}
 	
+	$('#purge-tab').show();
 	$('#inactive-table').find('tbody').append(tableText);
 }
 
