@@ -278,8 +278,10 @@ function loadKillboards() {
 					joined: member.joined,
 					last: member.last_on,
 					all_time: corpKills.data[0].kills,
-					this_month: (data.months ? (data.months[thisMonth] ? (data.months[thisMonth].shipsDestroyed ? data.months[thisMonth].shipsDestroyed : 0) : 0) : 0),
-					last_month: (data.months ? (data.months[lastMonth] ? (data.months[lastMonth].shipsDestroyed ? data.months[lastMonth].shipsDestroyed : 0) : 0) : 0),
+					this_month_kills: (data.months ? (data.months[thisMonth] ? (data.months[thisMonth].shipsDestroyed ? data.months[thisMonth].shipsDestroyed : 0) : 0) : 0),
+					this_month_losses: (data.months ? (data.months[thisMonth] ? (data.months[thisMonth].shipsLost ? data.months[thisMonth].shipsLost : 0) : 0) : 0),
+					last_month_kills: (data.months ? (data.months[lastMonth] ? (data.months[lastMonth].shipsDestroyed ? data.months[lastMonth].shipsDestroyed : 0) : 0) : 0),
+					last_month_losses: (data.months ? (data.months[lastMonth] ? (data.months[lastMonth].shipsLost ? data.months[lastMonth].shipsLost : 0) : 0) : 0),
 				};
 	
 	kbdata.push(temp);
@@ -291,9 +293,9 @@ function loadKillboards() {
 
 function showKillboard() {
 	kbdata.sort(function (a, b) {
-		if (a.this_month > b.this_month)
+		if (a.this_month_kills > b.this_month_kills)
 			return 1;
-		else if (a.this_month < b.this_month)
+		else if (a.this_month_kills < b.this_month_kills)
 			return -1;
 		else {
 			if (a.all_time > b.all_time)
@@ -319,8 +321,8 @@ function showKillboard() {
 							"<td>" + kbdata[i].joined.toString().substring(3,15) + "</td>" +
 							"<td>" + kbdata[i].last.toString().substring(3,15) + "</td>" +
 							"<td>" + kbdata[i].all_time + "</td>" +
-							"<td>" + kbdata[i].this_month + "</td>" +
-							"<td>" + kbdata[i].last_month + "</td>" +
+							"<td>" + kbdata[i].this_month_kills + "/" + kbdata[i].this_month_losses + "</td>" +
+							"<td>" + kbdata[i].last_month_kills + "/" + kbdata[i].last_month_losses + "</td>" +
 						"</tr>"
 	}
 	
