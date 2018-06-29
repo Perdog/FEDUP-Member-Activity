@@ -1,7 +1,7 @@
 var loginData = null;
 var allIDs = [];
 var purgeIDs = [];
-var list = {};
+var list = [];
 var kbdata = [];
 
 $('#logout').click(function() {
@@ -219,14 +219,14 @@ function loadInactiveMembers() {
 		var breakDown = json[key].logon_date.split("T");
 		var lastLogin = new Date(breakDown[0]);
 		var joined = new Date(json[key].start_date.split("T")[0]);
+		var toPurge = (lastLogin < cutoff);
 		
 		allIDs.push(json[key].character_id);
-		
-		if (lastLogin < cutoff) {
+		if (toPurge)
 			purgeIDs.push(json[key].character_id);
-			var temp = {"last_on": lastLogin, "joined": joined};
-			list[json[key].character_id] = temp;
-		}
+		
+		var temp = {"id": json[key].character_id, "purge": toPurge, "last_on": lastLogin, "joined": joined};
+		list.push(temp);
 	}
 	
 	lookupKillboards();
@@ -246,6 +246,17 @@ var statsLoaded = 0;
 function loadKillboards() {
 	var data = JSON.parse(this.responseText);
 	
+	var id = (data.info ? (data.info.id ? data.info.id : 0) : 0);
+	if (id === 0) {
+		statsLoaded++;
+		console.log("Failed");
+		return;
+	}
+	
+	var member = list.filter(e => e.id == id);
+	if (member)
+		member = member[0];
+	
 	var date = new Date();
 	var thisMonth = Number(date.getFullYear() + "" + (date.getMonth()+1 < 10 ? "0"+(date.getMonth()+1) : date.getMonth()+1));
 	var lastMonth = Number(date.getFullYear() + "" + (date.getMonth() === 0 ? 12 : (date.getMonth() < 10 ? "0"+date.getMonth() : date.getMonth())));
@@ -261,8 +272,11 @@ function loadKillboards() {
 	}
 	
 	var temp = 	{
+					id: id,
 					name: (data.info ? data.info.name : "Unknown"),
-					purge: (data.info ? (purgeIDs.includes(data.info.id) ? "Yes" : "") : ""),
+					purge: (member.purge ? "Yes" : ""),
+					joined: member.joined,
+					last: member.last_on,
 					all_time: corpKills.data[0].kills,
 					this_month: (data.months ? (data.months[thisMonth] ? (data.months[thisMonth].shipsDestroyed ? data.months[thisMonth].shipsDestroyed : 0) : 0) : 0),
 					last_month: (data.months ? (data.months[lastMonth] ? (data.months[lastMonth].shipsDestroyed ? data.months[lastMonth].shipsDestroyed : 0) : 0) : 0),
@@ -300,8 +314,10 @@ function showKillboard() {
 	
 	for (var i = 0; i < kbdata.length; i++) {
 		killTable += 	"<tr>" +
-							"<td>" + kbdata[i].name + "</td>" +
+							"<td><a target=\"_blank\" href=\"https://zkillboard.com/character/"+kbdata[i].id+"/\">" + kbdata[i].name + "</a></td>" +
 							"<td>" + kbdata[i].purge + "</td>" +
+							"<td>" + kbdata[i].joined.toString().substring(3,15) + "</td>" +
+							"<td>" + kbdata[i].last.toString().substring(3,15) + "</td>" +
 							"<td>" + kbdata[i].all_time + "</td>" +
 							"<td>" + kbdata[i].this_month + "</td>" +
 							"<td>" + kbdata[i].last_month + "</td>" +
@@ -340,7 +356,7 @@ function loadCharIDs() {
 	
 	for (var i = 0; i < data.length; i++) {
 		//list[data[i].id].name = data[i].name;
-		var m = list[data[i].id];
+		var m = list.filter(e => e.id == data[i].id)[0];
 		tableText += 	"<tr>" + 
 						"<td>" + (i+1) + "</td>" +
 						"<td>" + data[i].name + "</td>" +
