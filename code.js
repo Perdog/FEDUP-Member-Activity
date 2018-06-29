@@ -1,4 +1,6 @@
 var loginData = null;
+var allIDs = [];
+var purgeIDs = [];
 var list = {};
 var kbdata = [];
 
@@ -205,8 +207,6 @@ function fetchInactiveMembers() {
 
 function loadInactiveMembers() {
 	var json = JSON.parse(this.responseText);
-	var allids = [];
-	var ids = [];
 	
 	if (json.error) {
 		console.log("Error doing membertracking stuff: %1", json.error);
@@ -220,33 +220,32 @@ function loadInactiveMembers() {
 		var lastLogin = new Date(breakDown[0]);
 		var joined = new Date(json[key].start_date.split("T")[0]);
 		
-		allids.push(json[key].character_id);
+		allIDs.push(json[key].character_id);
 		
 		if (lastLogin < cutoff) {
-			ids.push(json[key].character_id);
+			purgeIDs.push(json[key].character_id);
 			var temp = {"last_on": lastLogin, "joined": joined};
 			list[json[key].character_id] = temp;
 		}
 	}
 	
-	lookupKillboards(allids);
-	lookupCharIDs(ids);
+	lookupKillboards();
+	lookupCharIDs();
 }
 
-function lookupKillboards(ids) {
-	statsMax = ids.length;
-	for (var i = 0; i < ids.length; i++) {
+function lookupKillboards() {
+	for (var i = 0; i < allIDs.length; i++) {
 		var fetch = new XMLHttpRequest();
 		fetch.onload = loadKillboards;
-		fetch.open('get', "https://zkillboard.com/api/stats/characterID/" + ids[i] + "/", true);
+		fetch.open('get', "https://zkillboard.com/api/stats/characterID/" + allIDs[i] + "/", true);
 		fetch.send();
 	}
 }
 
-var statsMax = 0;
 var statsLoaded = 0;
 function loadKillboards() {
 	var data = JSON.parse(this.responseText);
+	
 	var date = new Date();
 	var thisMonth = Number(date.getFullYear() + "" + (date.getMonth()+1 < 10 ? "0"+(date.getMonth()+1) : date.getMonth()+1));
 	var lastMonth = Number(date.getFullYear() + "" + (date.getMonth() === 0 ? 12 : (date.getMonth() < 10 ? "0"+date.getMonth() : date.getMonth())));
@@ -263,6 +262,7 @@ function loadKillboards() {
 	
 	var temp = 	{
 					name: (data.info ? data.info.name : "Unknown"),
+					purge: (data.info ? (purgeIDs.includes(data.info.id) ? "Yes" : "") : ""),
 					all_time: corpKills.data[0].kills,
 					this_month: (data.months ? (data.months[thisMonth] ? (data.months[thisMonth].shipsDestroyed ? data.months[thisMonth].shipsDestroyed : 0) : 0) : 0),
 					last_month: (data.months ? (data.months[lastMonth] ? (data.months[lastMonth].shipsDestroyed ? data.months[lastMonth].shipsDestroyed : 0) : 0) : 0),
@@ -271,7 +271,7 @@ function loadKillboards() {
 	kbdata.push(temp);
 	
 	statsLoaded++;
-	if (statsLoaded === statsMax)
+	if (statsLoaded === allIDs.length)
 		showKillboard();
 }
 
@@ -301,6 +301,7 @@ function showKillboard() {
 	for (var i = 0; i < kbdata.length; i++) {
 		killTable += 	"<tr>" +
 							"<td>" + kbdata[i].name + "</td>" +
+							"<td>" + kbdata[i].purge + "</td>" +
 							"<td>" + kbdata[i].all_time + "</td>" +
 							"<td>" + kbdata[i].this_month + "</td>" +
 							"<td>" + kbdata[i].last_month + "</td>" +
@@ -310,11 +311,11 @@ function showKillboard() {
 	$('#killboard-activity').append(killTable);
 }
 
-function lookupCharIDs(ids) {
+function lookupCharIDs() {
 	var fetch = new XMLHttpRequest();
 	fetch.onload = loadCharIDs;
 	fetch.open('post', "https://esi.evetech.net/latest/universe/names/?datasource=tranquility", true);
-	fetch.send(JSON.stringify(ids));
+	fetch.send(JSON.stringify(purgeIDs));
 }
 
 function loadCharIDs() {
