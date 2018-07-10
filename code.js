@@ -542,9 +542,10 @@ function sortTable(page, n) {
 			}
 		} else {
 			console.log(switchCount + " swaps made");
-			$('body').removeClass('waiting');
 		}
 	}
+	
+	$('body').removeClass('waiting');
 	
 	}, 500);
 }
