@@ -283,7 +283,7 @@ function loadKillboards() {
 	var thisMonth = Number(date.getFullYear() + "" + (date.getMonth()+1 < 10 ? "0"+(date.getMonth()+1) : date.getMonth()+1));
 	var lastMonth = Number(date.getFullYear() + "" + (date.getMonth() === 0 ? 12 : (date.getMonth() < 10 ? "0"+date.getMonth() : date.getMonth())));
 	
-	var allTime = "";
+	var allTime;
 	
 	var corpKills = data.topAllTime;
 	if (!corpKills) {
@@ -291,6 +291,8 @@ function loadKillboards() {
 		corpKills.data = [{kills: 0}];
 	} else {
 		corpKills = corpKills[1];
+		
+		allTime = corpKills.data.filter(e => e.corporationID == data.info.corporationID);
 	}
 	
 	var temp = 	{
@@ -299,7 +301,7 @@ function loadKillboards() {
 					purge: (member ? (member.purge ? "Yes" : "") : ""),
 					joined: (member ? member.joined : ""),
 					last: (member ? member.last_on : ""),
-					all_time: corpKills.data[0].kills,
+					all_time: (allTime && allTime[0] && allTime[0].kills ? allTime[0].kills : 0),
 					this_month_kills: (data.months ? (data.months[thisMonth] ? (data.months[thisMonth].shipsDestroyed ? data.months[thisMonth].shipsDestroyed : 0) : 0) : 0),
 					this_month_losses: (data.months ? (data.months[thisMonth] ? (data.months[thisMonth].shipsLost ? data.months[thisMonth].shipsLost : 0) : 0) : 0),
 					last_month_kills: (data.months ? (data.months[lastMonth] ? (data.months[lastMonth].shipsDestroyed ? data.months[lastMonth].shipsDestroyed : 0) : 0) : 0),
@@ -314,6 +316,7 @@ function loadKillboards() {
 }
 
 function showKillboard() {
+	
 	kbdata.sort(function (a, b) {
 		if (a.this_month_kills > b.this_month_kills)
 			return 1;
@@ -336,11 +339,15 @@ function showKillboard() {
 	});
 	var killTable = "";
 	
-	if (loginData.has_roles) {
-		killTable += "<tr><th>Name</th><th>Purge?</th><th>Join date</th><th>Last login</th><th>All time kills in corp</th><th>This month: Killes/Losses</th><th>Last month: Killes/Losses</th></tr>";
-	} else {
-		killTable += "<tr><th>Name</th><th>All time kills in corp</th><th>This month: Killes/Losses</th><th>Last month: Killes/Losses</th></tr>";
-	}
+	killTable += 	"<tr>" +
+						"<th onclick=\"sortTable(2,1)\">Name</th>" +
+						(loginData.has_roles ? "<th onclick=\"sortTable(2,2)\">Purge?</th>" : "") +
+						(loginData.has_roles ? "<th onclick=\"sortTable(2,3)\">Join date</th>" : "") +
+						(loginData.has_roles ? "<th onclick=\"sortTable(2,4)\">Last login</th>" : "") +
+						"<th onclick=\"sortTable(2,5)\">All time kills in corp</th>" +
+						"<th onclick=\"sortTable(2,6)\">This month: Killes/Losses</th>" +
+						"<th onclick=\"sortTable(2,7)\">Last month: Killes/Losses</th>" +
+					"</tr>";
 	
 	for (var i = 0; i < kbdata.length; i++) {
 		killTable += 	"<tr>" +
@@ -392,7 +399,7 @@ function loadCharIDs() {
 						"<td>" + data[i].name + "</td>" +
 						"<td>" + m.joined.toString().substring(3,15) + "</td>" +
 						"<td>" + m.last_on.toString().substring(3,15) + "</td>" +
-						"<td>" + parseTimer(Date.now() - new Date(m.last_on)) + "</td>" +
+						"<td>" + parseTimer(Date.now() - new Date(m.last_on), true) + "</td>" +
 						"</tr>";
 	}
 	
@@ -424,7 +431,7 @@ function parseHash(variable) {
     console.log('Hash variable %s not found', variable);
 }
 
-function parseTimer(duration) {
+function parseTimer(duration, largeOnly) {
 	var seconds = parseInt((duration/1000)%60);
 	var minutes = parseInt((duration/(1000*60))%60);
 	var hours = parseInt((duration/(1000*60*60))%24);
@@ -438,7 +445,10 @@ function parseTimer(duration) {
 	minutes = (minutes > 0) ? minutes + "M" : "";
 	seconds = ((seconds < 10) ? "0" + seconds : seconds);
 	
-	return ((years != "") ? years + ":" : "") + ((months != "") ? months + ":" : "") + ((days != "") ? days + ":" : "") + ((hours != "") ? hours + ":" : "") + ((minutes != "") ? minutes + ":" : "" ) + seconds + "S";
+	if (largeOnly)
+		return ((years != "") ? years + ":" : "") + ((months != "") ? months : "0mo") + ((days != "") ? ":"+days : "");
+	else
+		return ((years != "") ? years + ":" : "") + ((months != "") ? months + ":" : "") + ((days != "") ? days + ":" : "") + ((hours != "") ? hours + ":" : "") + ((minutes != "") ? minutes + ":" : "" ) + seconds + "S";
 }
 
 function tickTimer() {
@@ -460,38 +470,192 @@ function getCharName(id) {
 	return id;
 }
 
-function sortTable() {
-  var table, rows, switching, i, x, y, shouldSwitch;
-  table = document.getElementById("inactive-table");
-  switching = true;
-  /*Make a loop that will continue until
-  no switching has been done:*/
-  while (switching) {
-    //start by saying: no switching is done:
-    switching = false;
-    rows = table.getElementsByTagName("TR");
-    /*Loop through all table rows (except the
-    first, which contains table headers):*/
-    for (i = 1; i < (rows.length - 1); i++) {
-      //start by saying there should be no switching:
-      shouldSwitch = false;
-      /*Get the two elements you want to compare,
-      one from current row and one from the next:*/
-      x = (rows[i].getElementsByTagName("TD")[0]);
-      y = (rows[i + 1].getElementsByTagName("TD")[0]);
-      //check if the two rows should switch place:
-      if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-        //if so, mark as a switch and break the loop:
-        shouldSwitch = true;
-        break;
-      }
-    }
-    if (shouldSwitch) {
-      /*If a switch has been marked, make the switch
-      and mark that a switch has been done:*/
-      rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-      switching = true;
-    }
-  }
+function sortTable(page, n) {
+	$('body').addClass('waiting');
+	
+	setTimeout(function() {
+	var table, rows, switching, switchCount = 0, i, x, y, shouldSwitch, dir = "asc", changedDir = false;
+		
+	n -= 1;
+	
+	/* Add this little catch for trying to sort the last row of purge data.
+	The 2 last rows show the same data, except in different forms.
+	We bump n back to sort the row with sortable data, and we swap the sort direction
+	since the last row shows the data reversed.*/
+	if (page == 1 && n == 4) {
+		dir = "desc";
+		n = 3;
+	}
+	
+	console.log("Sorting table " + page + ", column " + n);
+	
+	table = (page == 1 ? document.getElementById("inactive-table") : (page == 2 ? document.getElementById("killboard-activity") : null));
+	
+	if (!table) {
+		console.log("No table selected");
+		return;
+	}
+	
+	switching = true;
+	/*Make a loop that will continue until
+	no switching has been done:*/
+	while (switching) {
+		//start by saying: no switching is done:
+		switching = false;
+		rows = table.getElementsByTagName("TR");
+		/*Loop through all table rows (except the
+		first, which contains table headers):*/
+		for (i = 1; i < (rows.length - 1); i++) {
+			//start by saying there should be no switching:
+			shouldSwitch = false;
+			/*Get the two elements you want to compare,
+			one from current row and one from the next:*/
+			x = (rows[i].getElementsByTagName("TD")[n]);
+			y = (rows[i + 1].getElementsByTagName("TD")[n]);
+			
+			//check if the two rows should switch place:
+			if (shouldWe(x, y, page, n, dir)) {
+				//if so, mark as a switch, count it, and break the loop:
+				shouldSwitch = true;
+				switchCount++;
+				break;
+			}
+		}
+		if (shouldSwitch) {
+			/*If a switch has been marked, make the switch
+			and mark that we need to continue.*/
+			rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+			switching = true;
+		} else if (switchCount == 0) {
+			/* If no switch has been made, check if we've made any switches at all.
+			If not, we're already sorted ascending and need to reverse it.*/
+			if (dir == "asc" && !changedDir) {
+				console.log("Switching to descending");
+				dir = "desc";
+				switching = true;
+				changedDir = true;
+			} else if (dir == "desc" && !changedDir) {
+				console.log("Switching to ascending");
+				dir = "asc";
+				switching = true;
+				changedDir = true;
+			}
+		} else {
+			console.log(switchCount + " swaps made");
+			$('body').removeClass('waiting');
+		}
+	}
+	
+	}, 500);
+}
+
+function shouldWe(x, y, table, n, dir) {
+	// Check which table we are focused on first
+	if (table == 1) { // Purge table
+		
+		switch(n) {
+			case 1:
+				if (dir == "asc") {
+					if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase())
+						return true;
+				} else {
+					if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase())
+						return true;
+				}
+				return false;
+			case 2:
+				if (dir == "asc") {
+					if (new Date(x.innerHTML) > new Date(y.innerHTML))
+						return true;
+				} else {
+					if (new Date(x.innerHTML) < new Date(y.innerHTML))
+						return true;
+				}
+				return false;
+			case 3:
+				if (dir == "asc") {
+					if (new Date(x.innerHTML) > new Date(y.innerHTML))
+						return true;
+				} else {
+					if (new Date(x.innerHTML) < new Date(y.innerHTML))
+						return true;
+				}
+				return false;
+		}
+		
+	} else if (table == 2) { // Killboard activity
+		
+		switch(n) {
+			case 0:
+				if (dir == "asc") {
+					if (x.firstElementChild.innerHTML.toLowerCase() > y.firstElementChild.innerHTML.toLowerCase())
+						return true;
+				} else {
+					if (x.firstElementChild.innerHTML.toLowerCase() < y.firstElementChild.innerHTML.toLowerCase())
+						return true;
+				}
+				return false;
+			case 1:
+				if (dir == "asc") {
+					if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase())
+						return true;
+				} else {
+					if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase())
+						return true;
+				}
+				return false;
+			case 2:
+				if (dir == "asc") {
+					if (new Date(x.innerHTML) > new Date(y.innerHTML))
+						return true;
+				} else {
+					if (new Date(x.innerHTML) < new Date(y.innerHTML))
+						return true;
+				}
+				return false;
+			case 3:
+				if (dir == "asc") {
+					if (new Date(x.innerHTML) > new Date(y.innerHTML))
+						return true;
+				} else {
+					if (new Date(x.innerHTML) < new Date(y.innerHTML))
+						return true;
+				}
+				return false;
+			case 4:
+				if (dir == "asc") {
+					if (Number(x.innerHTML.toLowerCase()) > Number(y.innerHTML.toLowerCase()))
+						return true;
+				} else {
+					if (Number(x.innerHTML.toLowerCase()) < Number(y.innerHTML.toLowerCase()))
+						return true;
+				}
+				return false;
+			case 5:
+				// Fall through. Same sort method.
+			case 6:
+				var xs = x.innerHTML.split("/");
+				var ys = y.innerHTML.split("/");
+				
+				var xk = Number(xs[0]);
+				var xl = Number(xs[1]);
+				var yk = Number(ys[0]);
+				var yl = Number(ys[1]);
+				
+				if (dir == "asc") {
+					if (xk > yk)
+						return true;
+					else if (xk == yk && xl > yl)
+						return true;
+				} else {
+					if (xk < yk)
+						return true;
+					else if (xk == yk && xl < yl)
+						return true;
+				}
+				return false;
+		}
+		
+	}
 }
 
