@@ -1,3 +1,6 @@
+var CLIENT_ID = "d39d34e683aa48c2b535b099c3dc404a";
+var SECRET_KEY = "IagCbSNWSZrOxF46GVNJesaTXiqaRviY2Li9fE1E";
+
 var loginData = null;
 var allIDs = [];
 var purgeIDs = [];
