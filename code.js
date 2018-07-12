@@ -1,6 +1,3 @@
-var CLIENT_ID = "d39d34e683aa48c2b535b099c3dc404a";
-var SECRET_KEY = "IagCbSNWSZrOxF46GVNJesaTXiqaRviY2Li9fE1E";
-
 var loginData = null;
 var allIDs = [];
 var purgeIDs = [];
@@ -21,15 +18,14 @@ $(document).ready(function() {
 	if (location.search) {
 		// The user has logged in. Now we stash all the info we want and reload the web page.
 		if (parseSearch("callback")) {
-			/*var ex = Date.now() + (parseHash("expires_in")*1000);
+			var ex = Date.now() + (parseHash("expires_in")*1000);
 			loginData =
 			{
 				token: parseHash("access_token"),
 				expires: ex
 			};
 			localStorage.loginData = JSON.stringify(loginData);
-			fetchCharInfo();*/
-			fetchRefresh();
+			fetchCharInfo();
 			return;
 		}
 	}
@@ -69,24 +65,6 @@ $(document).ready(function() {
 function showLogIn() {
 	$('#login').show();
 	$('#please-login').show();
-}
-
-function fetchRefresh() {
-	var code = parseSearch("code");
-	var encode = btoa(CLIENT_ID + ":" + SECRET_KEY);
-	
-	var fetch = new XMLHttpRequest();
-	fetch.onload = loadRefresh();
-	fetch.open('post', "https://login.eveonline.com/oauth/token?grant_type=authorization_code&code="+code, true);
-	fetch.setRequestHeader("Authorization", "Basic " + encode);
-	fetch.send();
-}
-
-function loadRefresh() {
-	var data = this.responseText;
-	
-	console.log(this);
-	console.log(data);
 }
 
 // Fire XHR request for server data
