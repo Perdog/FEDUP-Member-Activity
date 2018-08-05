@@ -63,6 +63,14 @@
 			border-bottom: 1px solid gray;
 		}
 		
+		tbody > tr:nth-child(even) {
+			background-color: #3a3f44;
+		}
+
+		tbody > tr:nth-child(odd) {
+			background-color: #484e55;
+		}
+		
 		.dynamic-content {
 			display: none;
 		}
@@ -209,18 +217,23 @@
 						<div class="row">
 							<div class="column" id="tabs-1">
 								<table id="inactive-table">
-									<tbody>
+									<thead>
 										<th></th>
 										<th>Name</th>
 										<th>Joined</th>
 										<th>Last online</th>
 										<th>Offline for</th>
+									</thead>
+									<tbody>
+										
 									</tbody>
 								</table>
 							</div>
 						
 							<div class="column" id="tabs-2">
 								<table id="killboard-activity">
+									<thead>
+									</thead>
 									<tbody>
 										
 									</tbody>

@@ -4,6 +4,10 @@ var purgeIDs = [];
 var list = [];
 var kbdata = [];
 
+$('tbody.tr').click(function () {
+	console.log("wee");
+});
+
 $('#logout').click(function() {
 	localStorage.removeItem("loginData");
 	location.reload();
@@ -337,9 +341,9 @@ function showKillboard() {
 	var killTable = "";
 	
 	if (loginData.has_roles) {
-		killTable += "<tr><th>Name</th><th>Purge?</th><th>Join date</th><th>Last login</th><th>All time kills in corp</th><th>This month: Killes/Losses</th><th>Last month: Killes/Losses</th></tr>";
+		$('#killboard-activity').find('thead').append("<tr><th>Name</th><th>Purge?</th><th>Join date</th><th>Last login</th><th>All time kills in corp</th><th>This month: Killes/Losses</th><th>Last month: Killes/Losses</th></tr>");
 	} else {
-		killTable += "<tr><th>Name</th><th>All time kills in corp</th><th>This month: Killes/Losses</th><th>Last month: Killes/Losses</th></tr>";
+		$('#killboard-activity').find('thead').append("<tr><th>Name</th><th>All time kills in corp</th><th>This month: Killes/Losses</th><th>Last month: Killes/Losses</th></tr>");
 	}
 	
 	for (var i = 0; i < kbdata.length; i++) {
