@@ -9,6 +9,9 @@
 	<link rel="stylesheet" href="./bootstrap.css">
 	
 	<style>
+		.waiting {
+			cursor: wait !important;
+		}
 		ul {
 			list-style-type: none;
 			margin: 0;
@@ -69,6 +72,10 @@
 
 		tbody > tr:nth-child(odd) {
 			background-color: #484e55;
+		}
+		
+		th:hover {
+			background-color: #111;
 		}
 		
 		.dynamic-content {
@@ -218,14 +225,15 @@
 							<div class="column" id="tabs-1">
 								<table id="inactive-table">
 									<thead>
-										<th></th>
-										<th>Name</th>
-										<th>Joined</th>
-										<th>Last online</th>
-										<th>Offline for</th>
+										<tr>
+											<th></th>
+											<th onclick="sortTable(1,2)">Name</th>
+											<th onclick="sortTable(1,3)">Joined</th>
+											<th onclick="sortTable(1,4)">Last online</th>
+											<th onclick="sortTable(1,5)">Offline for</th>
+										</tr>
 									</thead>
 									<tbody>
-										
 									</tbody>
 								</table>
 							</div>
