@@ -4,8 +4,9 @@ var purgeIDs = [];
 var list = [];
 var kbdata = [];
 
-$('tbody.tr').click(function () {
-	console.log("wee");
+$('tbody').on("click", "tr", function(e) {
+	console.log($(this).css('background-color'));
+	$(this).css('background-color', 'green');
 });
 
 $('#logout').click(function() {
