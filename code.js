@@ -17,21 +17,23 @@ var purgeState = {
 
 $('tbody').on("click", "tr", function(e) {
 	console.log($(this).css('background-color'));
+	var id = this.id.slice(3);
 	
 	switch ($(this).css('background-color')) {
 		case purgeState.Dnp:
-			$(this).css('background-color', '');
-			dnpList.splice(dnpList.indexOf("#" + this.id), 1);
+			$("#in-"+id).css('background-color', '');
+			$("#kb-"+id).css('background-color', '');
+			dnpList.splice(dnpList.indexOf(id), 1);
 			break;
 		case purgeState.Purged:
-			var id = "#" + this.id;
-			$(this).css('background-color', purgeState.Dnp);
+			$("#kb-"+id).css('background-color', purgeState.Dnp);
+			$("#in-"+id).css('background-color', purgeState.Dnp);
 			purgedList.splice(purgedList.indexOf(id), 1);
 			dnpList.push(id);
 			break;
 		case purgeState.Stasis:
-			var id = "#" + this.id;
-			$(this).css('background-color', purgeState.Purged);
+			$("#kb-"+id).css('background-color', purgeState.Purged);
+			$("#in-"+id).css('background-color', purgeState.Purged);
 			stasisList.splice(stasisList.indexOf(id), 1);
 			purgedList.push(id);
 			break;
@@ -40,8 +42,9 @@ $('tbody').on("click", "tr", function(e) {
 			break;
 		default:
 			console.log("Normal color");
-			$(this).css('background-color', purgeState.Stasis);
-			stasisList.push("#" + this.id);
+			$("#kb-"+id).css('background-color', purgeState.Stasis);
+			$("#in-"+id).css('background-color', purgeState.Stasis);
+			stasisList.push(id);
 			break;
 	}
 	
@@ -419,7 +422,7 @@ function showKillboard() {
 	}
 	
 	$('#killboard-activity').find('tbody').append(killTable);
-	assignBackgrounds();
+	assignBackgrounds(2);
 }
 
 function lookupCharIDs() {
@@ -452,7 +455,7 @@ function loadCharIDs() {
 	for (var i = 0; i < data.length; i++) {
 		//list[data[i].id].name = data[i].name;
 		var m = list.filter(e => e.id == data[i].id)[0];
-		tableText += 	"<tr id='inact-"+data[i].name.replace(/ /gi, "-")+"'>" + 
+		tableText += 	"<tr id='in-"+data[i].name.replace(/ /gi, "-")+"'>" + 
 							"<td>" + (i+1) + "</td>" +
 							"<td>" + data[i].name + "</td>" +
 							"<td>" + m.joined.toString().substring(3,15) + "</td>" +
@@ -463,24 +466,31 @@ function loadCharIDs() {
 	
 	$('#purge-tab').show();
 	$('#inactive-table').find('tbody').append(tableText);
-	assignBackgrounds();
+	assignBackgrounds(1);
 }
 
-function assignBackgrounds() {
+function assignBackgrounds(type) {
+	
+	var prefix = "#";
+	if (type == 1)
+		prefix += "in-";
+	else if (type == 2)
+		prefix += "kb-";
+	
 	// Loop through the lists and color the rows
 	stasisList.forEach(function(e) {
-		$(e).css('background-color', purgeState.Stasis);
-		console.log($(e));
+		$(prefix + e).css('background-color', purgeState.Stasis);
+		console.log($(prefix + e));
 		console.log("Found someone in stasis");
 	});
 	purgedList.forEach(function(e) {
-		$(e).css('background-color', purgeState.Purged);
-		console.log($(e));
+		$(prefix + e).css('background-color', purgeState.Purged);
+		console.log($(prefix + e));
 		console.log("Found someone already purged");
 	});
 	dnpList.forEach(function(e) {
-		$(e).css('background-color', purgeState.Dnp);
-		console.log($(e));
+		$(prefix + e).css('background-color', purgeState.Dnp);
+		console.log($(prefix + e));
 		console.log("Found someone who shouldn't be purged");
 	});
 	
