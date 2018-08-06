@@ -4,9 +4,50 @@ var purgeIDs = [];
 var list = [];
 var kbdata = [];
 
+var stasisList = [];
+var purgedList = [];
+var dnpList = [];
+
+var purgeState = {
+	Default: "",
+	Stasis: "rgb(128, 128, 0)",
+	Dnp: "rgb(128, 0, 0)",
+	Purged: "rgb(0, 128, 0)",
+};
+
 $('tbody').on("click", "tr", function(e) {
 	console.log($(this).css('background-color'));
-	$(this).css('background-color', 'green');
+	
+	switch ($(this).css('background-color')) {
+		case purgeState.Dnp:
+			$(this).css('background-color', '');
+			dnpList.splice(dnpList.indexOf("#" + this.id), 1);
+			break;
+		case purgeState.Purged:
+			var id = "#" + this.id;
+			$(this).css('background-color', purgeState.Dnp);
+			purgedList.splice(purgedList.indexOf(id), 1);
+			dnpList.push(id);
+			break;
+		case purgeState.Stasis:
+			var id = "#" + this.id;
+			$(this).css('background-color', purgeState.Purged);
+			stasisList.splice(stasisList.indexOf(id), 1);
+			purgedList.push(id);
+			break;
+		case purgeState.Default:
+			console.log("Probably shouldn't ever see this");
+			break;
+		default:
+			console.log("Normal color");
+			$(this).css('background-color', purgeState.Stasis);
+			stasisList.push("#" + this.id);
+			break;
+	}
+	
+	localStorage.stasis = JSON.stringify(stasisList);
+	localStorage.purged = JSON.stringify(purgedList);
+	localStorage.dnp = JSON.stringify(dnpList);
 });
 
 $('#logout').click(function() {
@@ -17,6 +58,15 @@ $('#logout').click(function() {
 $(document).ready(function() {
 	// Load server status into header
 	//serverStatus();
+	
+	// Load all of the stored values into memory
+	if (localStorage.stasis)
+		stasisList = JSON.parse(localStorage.stasis);
+	if (localStorage.purged)
+		purgedList = JSON.parse(localStorage.purged);
+	if (localStorage.dnp)
+		dnpList = JSON.parse(localStorage.dnp);
+	
 	$('#nav-tabs').tabs();
 	
 	// Do we have a search location
@@ -196,6 +246,7 @@ function loadThingsOntoPage() {
 			- Endpoint: https://esi.evetech.net/latest/corporations/<corpID>/members/titles/?datasource=tranquility
 			- List character titles along with their names
 	*/
+	
 	if (loginData.has_roles)
 		fetchInactiveMembers();
 	else
@@ -356,7 +407,7 @@ function showKillboard() {
 					"</tr>");
 	
 	for (var i = 0; i < kbdata.length; i++) {
-		killTable += 	"<tr>" +
+		killTable += 	"<tr id='kb-"+kbdata[i].name.replace(/ /gi, "-")+"'>" +
 							"<td><a target=\"_blank\" href=\"https://zkillboard.com/character/"+kbdata[i].id+"/\">" + kbdata[i].name + "</a></td>" +
 							(loginData.has_roles ? ("<td>" + kbdata[i].purge + "</td>") : "") +
 							(loginData.has_roles ? ("<td>" + kbdata[i].joined.toString().substring(3,15) + "</td>") : "") +
@@ -368,6 +419,7 @@ function showKillboard() {
 	}
 	
 	$('#killboard-activity').find('tbody').append(killTable);
+	assignBackgrounds();
 }
 
 function lookupCharIDs() {
@@ -400,17 +452,38 @@ function loadCharIDs() {
 	for (var i = 0; i < data.length; i++) {
 		//list[data[i].id].name = data[i].name;
 		var m = list.filter(e => e.id == data[i].id)[0];
-		tableText += 	"<tr>" + 
-						"<td>" + (i+1) + "</td>" +
-						"<td>" + data[i].name + "</td>" +
-						"<td>" + m.joined.toString().substring(3,15) + "</td>" +
-						"<td>" + m.last_on.toString().substring(3,15) + "</td>" +
-						"<td>" + parseTimer(Date.now() - new Date(m.last_on), true) + "</td>" +
+		tableText += 	"<tr id='inact-"+data[i].name.replace(/ /gi, "-")+"'>" + 
+							"<td>" + (i+1) + "</td>" +
+							"<td>" + data[i].name + "</td>" +
+							"<td>" + m.joined.toString().substring(3,15) + "</td>" +
+							"<td>" + m.last_on.toString().substring(3,15) + "</td>" +
+							"<td>" + parseTimer(Date.now() - new Date(m.last_on), true) + "</td>" +
 						"</tr>";
 	}
 	
 	$('#purge-tab').show();
 	$('#inactive-table').find('tbody').append(tableText);
+	assignBackgrounds();
+}
+
+function assignBackgrounds() {
+	// Loop through the lists and color the rows
+	stasisList.forEach(function(e) {
+		$(e).css('background-color', purgeState.Stasis);
+		console.log($(e));
+		console.log("Found someone in stasis");
+	});
+	purgedList.forEach(function(e) {
+		$(e).css('background-color', purgeState.Purged);
+		console.log($(e));
+		console.log("Found someone already purged");
+	});
+	dnpList.forEach(function(e) {
+		$(e).css('background-color', purgeState.Dnp);
+		console.log($(e));
+		console.log("Found someone who shouldn't be purged");
+	});
+	
 }
 
 function parseSearch(variable) {
