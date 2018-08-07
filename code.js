@@ -7,6 +7,7 @@ var kbdata = [];
 var stasisList = [];
 var purgedList = [];
 var dnpList = [];
+var notesList = {};
 
 var purgeState = {
 	Default: "",
@@ -14,6 +15,9 @@ var purgeState = {
 	Dnp: "rgb(128, 0, 0)",
 	Purged: "rgb(0, 128, 0)",
 };
+
+var cMenu = $('#contextmenu');
+var clickedID = "";
 
 $('tbody').on("click", "tr", function(e) {
 	console.log($(this).css('background-color'));
@@ -53,6 +57,57 @@ $('tbody').on("click", "tr", function(e) {
 	localStorage.dnp = JSON.stringify(dnpList);
 });
 
+$('tbody').on("contextmenu", "tr", function(e) {
+	console.log(e);
+	
+	clickedID = this.id.slice(3);
+	
+	if (notesList[clickedID]) {
+		$('#note-add').hide();
+		$('#note-edit').show();
+		$('#note-remove').show();
+	} else {
+		$('#note-add').show();
+		$('#note-edit').hide();
+		$('#note-remove').hide();
+	}
+	
+	var posY = e.clientY;
+	var posX = e.clientX;
+	
+	cMenu.css({"left":posX,"top":posY});
+	cMenu.show();
+	
+	return false;
+});
+// <img src='./imgs/note.png' style='width:32px;height:32px;' class='dynamic-content has-note'><span class='tooltip'></span></img>
+function saveNote() {
+	notesList[clickedID] = $('#toon-note').val();
+	$('#toon-note').val("");
+	$('#in-' + clickedID).find('.has-note').show();
+	$('#in-' + clickedID).find('.tool-tip-text').text(notesList[clickedID]);
+	$('#kb-' + clickedID).find('.has-note').show();
+	$('#kb-' + clickedID).find('.tool-tip-text').text(notesList[clickedID]);
+	localStorage.notes = JSON.stringify(notesList);
+}
+
+function loadNote() {
+	$('#toon-prefix').text("Edit the note for ");
+	$('#toon-name').text(clickedID.replace(/-/gi, " "));
+	$('#toon-note').val(notesList[clickedID]);
+}
+
+function removeNote() {
+	delete notesList[clickedID];
+	localStorage.notes = JSON.stringify(notesList);
+	$('#in-' + clickedID).find('.has-note').hide();
+	$('#kb-' + clickedID).find('.has-note').hide();
+}
+
+$(document).on("click", function(e) {
+	cMenu.hide();
+});
+
 $('#logout').click(function() {
 	localStorage.removeItem("loginData");
 	location.reload();
@@ -69,6 +124,8 @@ $(document).ready(function() {
 		purgedList = JSON.parse(localStorage.purged);
 	if (localStorage.dnp)
 		dnpList = JSON.parse(localStorage.dnp);
+	if (localStorage.notes)
+		notesList = JSON.parse(localStorage.notes);
 	
 	$('#nav-tabs').tabs();
 	
@@ -411,7 +468,7 @@ function showKillboard() {
 	
 	for (var i = 0; i < kbdata.length; i++) {
 		killTable += 	"<tr id='kb-"+kbdata[i].name.replace(/ /gi, "-")+"'>" +
-							"<td><a target=\"_blank\" href=\"https://zkillboard.com/character/"+kbdata[i].id+"/\">" + kbdata[i].name + "</a></td>" +
+							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:32px;height:32px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a><a target=\"_blank\" href=\"https://zkillboard.com/character/"+kbdata[i].id+"/\">" + kbdata[i].name + "</a></td>" +
 							(loginData.has_roles ? ("<td>" + kbdata[i].purge + "</td>") : "") +
 							(loginData.has_roles ? ("<td>" + kbdata[i].joined.toString().substring(3,15) + "</td>") : "") +
 							(loginData.has_roles ? ("<td>" + kbdata[i].last.toString().substring(3,15) + "</td>") : "") +
@@ -457,7 +514,7 @@ function loadCharIDs() {
 		var m = list.filter(e => e.id == data[i].id)[0];
 		tableText += 	"<tr id='in-"+data[i].name.replace(/ /gi, "-")+"'>" + 
 							"<td>" + (i+1) + "</td>" +
-							"<td>" + data[i].name + "</td>" +
+							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:32px;height:32px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a>" + data[i].name + "</td>" +
 							"<td>" + m.joined.toString().substring(3,15) + "</td>" +
 							"<td>" + m.last_on.toString().substring(3,15) + "</td>" +
 							"<td>" + parseTimer(Date.now() - new Date(m.last_on), true) + "</td>" +
@@ -493,6 +550,10 @@ function assignBackgrounds(type) {
 		console.log($(prefix + e));
 		console.log("Found someone who shouldn't be purged");
 	});
+	for (var e in notesList) {
+		$(prefix + e).find('.has-note').show();
+		$(prefix + e).find('.tool-tip-text').text(notesList[e]);
+	};
 	
 }
 
