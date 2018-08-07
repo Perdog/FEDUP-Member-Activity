@@ -80,7 +80,7 @@ $('tbody').on("contextmenu", "tr", function(e) {
 	
 	return false;
 });
-// <img src='./imgs/note.png' style='width:32px;height:32px;' class='dynamic-content has-note'><span class='tooltip'></span></img>
+
 function saveNote() {
 	notesList[clickedID] = $('#toon-note').val();
 	$('#toon-note').val("");
@@ -468,7 +468,7 @@ function showKillboard() {
 	
 	for (var i = 0; i < kbdata.length; i++) {
 		killTable += 	"<tr id='kb-"+kbdata[i].name.replace(/ /gi, "-")+"'>" +
-							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:32px;height:32px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a><a target=\"_blank\" href=\"https://zkillboard.com/character/"+kbdata[i].id+"/\">" + kbdata[i].name + "</a></td>" +
+							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a><a target=\"_blank\" href=\"https://zkillboard.com/character/"+kbdata[i].id+"/\">" + kbdata[i].name + "</a></td>" +
 							(loginData.has_roles ? ("<td>" + kbdata[i].purge + "</td>") : "") +
 							(loginData.has_roles ? ("<td>" + kbdata[i].joined.toString().substring(3,15) + "</td>") : "") +
 							(loginData.has_roles ? ("<td>" + kbdata[i].last.toString().substring(3,15) + "</td>") : "") +
@@ -514,7 +514,7 @@ function loadCharIDs() {
 		var m = list.filter(e => e.id == data[i].id)[0];
 		tableText += 	"<tr id='in-"+data[i].name.replace(/ /gi, "-")+"'>" + 
 							"<td>" + (i+1) + "</td>" +
-							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:32px;height:32px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a>" + data[i].name + "</td>" +
+							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a>" + data[i].name + "</td>" +
 							"<td>" + m.joined.toString().substring(3,15) + "</td>" +
 							"<td>" + m.last_on.toString().substring(3,15) + "</td>" +
 							"<td>" + parseTimer(Date.now() - new Date(m.last_on), true) + "</td>" +
