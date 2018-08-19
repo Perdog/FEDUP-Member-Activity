@@ -455,23 +455,18 @@ function showKillboard() {
 	});
 	var killTable = "";
 	
-	$('#killboard-activity').find('thead').append(
-					"<tr>" +
-						"<th onclick=\"sortTable(2,1)\">Name</th>" +
-						(loginData.has_roles ? "<th onclick=\"sortTable(2,2)\">Purge?</th>" : "") +
-						(loginData.has_roles ? "<th onclick=\"sortTable(2,3)\">Join date</th>" : "") +
-						(loginData.has_roles ? "<th onclick=\"sortTable(2,4)\">Last login</th>" : "") +
-						"<th onclick=\"sortTable(2,5)\">All time kills in corp</th>" +
-						"<th onclick=\"sortTable(2,6)\">This month: Killes/Losses</th>" +
-						"<th onclick=\"sortTable(2,7)\">Last month: Killes/Losses</th>" +
-					"</tr>");
+	if (!loginData.has_roles) {
+		$('#kbh-purge').hide();
+		$('#kbh-last').hide();
+		$('#kbh-join').hide();
+	}
 	
 	for (var i = 0; i < kbdata.length; i++) {
 		killTable += 	"<tr id='kb-"+kbdata[i].name.replace(/ /gi, "-")+"'>" +
 							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a><a target=\"_blank\" href=\"https://zkillboard.com/character/"+kbdata[i].id+"/\">" + kbdata[i].name + "</a></td>" +
 							(loginData.has_roles ? ("<td>" + kbdata[i].purge + "</td>") : "") +
-							(loginData.has_roles ? ("<td>" + kbdata[i].joined.toString().substring(3,15) + "</td>") : "") +
-							(loginData.has_roles ? ("<td>" + kbdata[i].last.toString().substring(3,15) + "</td>") : "") +
+							(loginData.has_roles ? ("<td data-date='"+kbdata[i].joined+"'>" + kbdata[i].joined.toString().substring(3,15) + "</td>") : "") +
+							(loginData.has_roles ? ("<td data-date='"+kbdata[i].last+"'>" + kbdata[i].last.toString().substring(3,15) + "</td>") : "") +
 							"<td>" + kbdata[i].all_time + "</td>" +
 							"<td>" + kbdata[i].this_month_kills + "/" + kbdata[i].this_month_losses + "</td>" +
 							"<td>" + kbdata[i].last_month_kills + "/" + kbdata[i].last_month_losses + "</td>" +
@@ -479,6 +474,7 @@ function showKillboard() {
 	}
 	
 	$('#killboard-activity').find('tbody').append(killTable);
+	$('#killboard-activity').trigger("update");
 	assignBackgrounds(2);
 }
 
@@ -515,14 +511,15 @@ function loadCharIDs() {
 		tableText += 	"<tr id='in-"+data[i].name.replace(/ /gi, "-")+"'>" + 
 							"<td>" + (i+1) + "</td>" +
 							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a>" + data[i].name + "</td>" +
-							"<td>" + m.joined.toString().substring(3,15) + "</td>" +
-							"<td>" + m.last_on.toString().substring(3,15) + "</td>" +
-							"<td>" + parseTimer(Date.now() - new Date(m.last_on), true) + "</td>" +
+							"<td data-date='"+m.joined+"'>" + m.joined.toString().substring(3,15) + "</td>" +
+							"<td data-date='"+m.last_on+"'>" + m.last_on.toString().substring(3,15) + "</td>" +
+							"<td data-date='"+m.last_on+"'>" + parseTimer(Date.now() - new Date(m.last_on), true) + "</td>" +
 						"</tr>";
 	}
 	
 	$('#purge-tab').show();
 	$('#inactive-table').find('tbody').append(tableText);
+	$('#inactive-table').trigger("update");
 	assignBackgrounds(1);
 }
 
@@ -620,193 +617,83 @@ function getCharName(id) {
 	return id;
 }
 
-function sortTable(page, n) {
-	$('body').addClass('waiting');
-	
-	setTimeout(function() {
-	var table, rows, switching, switchCount = 0, i, x, y, shouldSwitch, dir = "asc", changedDir = false;
-		
-	n -= 1;
-	
-	/* Add this little catch for trying to sort the last row of purge data.
-	The 2 last rows show the same data, except in different forms.
-	We bump n back to sort the row with sortable data, and we swap the sort direction
-	since the last row shows the data reversed.*/
-	if (page == 1 && n == 4) {
-		dir = "desc";
-		n = 3;
-	}
-	
-	console.log("Sorting table " + page + ", column " + n);
-	
-	table = (page == 1 ? document.getElementById("inactive-table") : (page == 2 ? document.getElementById("killboard-activity") : null));
-	
-	if (!table) {
-		console.log("No table selected");
-		return;
-	}
-	
-	switching = true;
-	/*Make a loop that will continue until
-	no switching has been done:*/
-	while (switching) {
-		//start by saying: no switching is done:
-		switching = false;
-		rows = table.getElementsByTagName("TR");
-		/*Loop through all table rows (except the
-		first, which contains table headers):*/
-		for (i = 1; i < (rows.length - 1); i++) {
-			//start by saying there should be no switching:
-			shouldSwitch = false;
-			/*Get the two elements you want to compare,
-			one from current row and one from the next:*/
-			x = (rows[i].getElementsByTagName("TD")[n]);
-			y = (rows[i + 1].getElementsByTagName("TD")[n]);
-			
-			//check if the two rows should switch place:
-			if (shouldWe(x, y, page, n, dir)) {
-				//if so, mark as a switch, count it, and break the loop:
-				shouldSwitch = true;
-				switchCount++;
-				break;
-			}
-		}
-		if (shouldSwitch) {
-			/*If a switch has been marked, make the switch
-			and mark that we need to continue.*/
-			rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-			switching = true;
-		} else if (switchCount == 0) {
-			/* If no switch has been made, check if we've made any switches at all.
-			If not, we're already sorted ascending and need to reverse it.*/
-			if (dir == "asc" && !changedDir) {
-				console.log("Switching to descending");
-				dir = "desc";
-				switching = true;
-				changedDir = true;
-			} else if (dir == "desc" && !changedDir) {
-				console.log("Switching to ascending");
-				dir = "asc";
-				switching = true;
-				changedDir = true;
-			}
-		} else {
-			console.log(switchCount + " swaps made");
-		}
-	}
-	
-	$('body').removeClass('waiting');
-	
-	}, 500);
-}
+$(function() {
+	$.tablesorter.addParser(
+	{
+		id: 'names',
+		is: function(s) {
+			return false;
+		},
+		format: function(s, table, cell) {
+			//console.log($(cell).contents());
+			var child = $(cell).contents()[1];
+			return child.textContent.toLowerCase();
+		},
+		type: 'text'
+	});
 
-function shouldWe(x, y, table, n, dir) {
-	// Check which table we are focused on first
-	if (table == 1) { // Purge table
-		
-		switch(n) {
-			case 1:
-				if (dir == "asc") {
-					if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase())
-						return true;
-				} else {
-					if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase())
-						return true;
-				}
-				return false;
-			case 2:
-				if (dir == "asc") {
-					if (new Date(x.innerHTML) > new Date(y.innerHTML))
-						return true;
-				} else {
-					if (new Date(x.innerHTML) < new Date(y.innerHTML))
-						return true;
-				}
-				return false;
-			case 3:
-				if (dir == "asc") {
-					if (new Date(x.innerHTML) > new Date(y.innerHTML))
-						return true;
-				} else {
-					if (new Date(x.innerHTML) < new Date(y.innerHTML))
-						return true;
-				}
-				return false;
+	$.tablesorter.addParser(
+	{
+		id: 'dates',
+		is: function(s) {
+			return false;
+		},
+		format: function(s, table, cell) {
+			return new Date($(cell).attr('data-date'));
+		},
+		type: 'numeric'
+	});
+
+	$.tablesorter.addParser(
+	{
+		id: 'months',
+		is: function(s) {
+			return false;
+		},
+		format: function(s, table, cell) {
+			var str = s.split("/");
+			var n = Number.parseFloat(str[0]+"."+str[1]);
+			return n;
+		},
+		type: 'numeric'
+	});
+	
+	$('#killboard-activity').tablesorter({
+		headers: {
+			0: {
+				sorter: 'names'
+			},
+			2: {
+				sorter: 'dates'
+			},
+			3: {
+				sorter: 'dates'
+			},
+			5: {
+				sorter: 'months'
+			},
+			6: {
+				sorter: 'months'
+			}
 		}
-		
-	} else if (table == 2) { // Killboard activity
-		
-		switch(n) {
-			case 0:
-				if (dir == "asc") {
-					if (x.firstElementChild.innerHTML.toLowerCase() > y.firstElementChild.innerHTML.toLowerCase())
-						return true;
-				} else {
-					if (x.firstElementChild.innerHTML.toLowerCase() < y.firstElementChild.innerHTML.toLowerCase())
-						return true;
-				}
-				return false;
-			case 1:
-				if (dir == "asc") {
-					if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase())
-						return true;
-				} else {
-					if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase())
-						return true;
-				}
-				return false;
-			case 2:
-				if (dir == "asc") {
-					if (new Date(x.innerHTML) > new Date(y.innerHTML))
-						return true;
-				} else {
-					if (new Date(x.innerHTML) < new Date(y.innerHTML))
-						return true;
-				}
-				return false;
-			case 3:
-				if (dir == "asc") {
-					if (new Date(x.innerHTML) > new Date(y.innerHTML))
-						return true;
-				} else {
-					if (new Date(x.innerHTML) < new Date(y.innerHTML))
-						return true;
-				}
-				return false;
-			case 4:
-				if (dir == "asc") {
-					if (Number(x.innerHTML.toLowerCase()) > Number(y.innerHTML.toLowerCase()))
-						return true;
-				} else {
-					if (Number(x.innerHTML.toLowerCase()) < Number(y.innerHTML.toLowerCase()))
-						return true;
-				}
-				return false;
-			case 5:
-				// Fall through. Same sort method.
-			case 6:
-				var xs = x.innerHTML.split("/");
-				var ys = y.innerHTML.split("/");
-				
-				var xk = Number(xs[0]);
-				var xl = Number(xs[1]);
-				var yk = Number(ys[0]);
-				var yl = Number(ys[1]);
-				
-				if (dir == "asc") {
-					if (xk > yk)
-						return true;
-					else if (xk == yk && xl > yl)
-						return true;
-				} else {
-					if (xk < yk)
-						return true;
-					else if (xk == yk && xl < yl)
-						return true;
-				}
-				return false;
+	});
+	
+	$('#inactive-table').tablesorter({
+		headers: {
+			1: {
+				sorter: 'names'
+			},
+			2: {
+				sorter: 'dates'
+			},
+			3: {
+				sorter: 'dates'
+			},
+			4: {
+				sorter: 'dates'
+			}
 		}
-		
-	}
-}
+	});
+});
+
 
