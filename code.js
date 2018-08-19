@@ -20,7 +20,6 @@ var cMenu = $('#contextmenu');
 var clickedID = "";
 
 $('tbody').on("click", "tr", function(e) {
-	console.log($(this).css('background-color'));
 	var id = this.id.slice(3);
 	
 	switch ($(this).css('background-color')) {
@@ -45,7 +44,6 @@ $('tbody').on("click", "tr", function(e) {
 			console.log("Probably shouldn't ever see this");
 			break;
 		default:
-			console.log("Normal color");
 			$("#kb-"+id).css('background-color', purgeState.Stasis);
 			$("#in-"+id).css('background-color', purgeState.Stasis);
 			stasisList.push(id);
@@ -58,8 +56,6 @@ $('tbody').on("click", "tr", function(e) {
 });
 
 $('tbody').on("contextmenu", "tr", function(e) {
-	console.log(e);
-	
 	clickedID = this.id.slice(3);
 	
 	if (notesList[clickedID]) {
@@ -216,7 +212,6 @@ function fetchCharInfo() {
 // Catch verify response
 function charLoad() {
 	var data = JSON.parse(this.responseText);
-	console.log(data);
 	loginData.name = data.CharacterName;
 	loginData.id = data.CharacterID;
 	// DEBUG
@@ -534,18 +529,12 @@ function assignBackgrounds(type) {
 	// Loop through the lists and color the rows
 	stasisList.forEach(function(e) {
 		$(prefix + e).css('background-color', purgeState.Stasis);
-		console.log($(prefix + e));
-		console.log("Found someone in stasis");
 	});
 	purgedList.forEach(function(e) {
 		$(prefix + e).css('background-color', purgeState.Purged);
-		console.log($(prefix + e));
-		console.log("Found someone already purged");
 	});
 	dnpList.forEach(function(e) {
 		$(prefix + e).css('background-color', purgeState.Dnp);
-		console.log($(prefix + e));
-		console.log("Found someone who shouldn't be purged");
 	});
 	for (var e in notesList) {
 		$(prefix + e).find('.has-note').show();
@@ -625,7 +614,6 @@ $(function() {
 			return false;
 		},
 		format: function(s, table, cell) {
-			//console.log($(cell).contents());
 			var child = $(cell).contents()[1];
 			return child.textContent.toLowerCase();
 		},
