@@ -391,8 +391,9 @@ function loadKillboards() {
 		member = member[0];
 	
 	var date = new Date();
-	var thisMonth = Number(date.getFullYear() + "" + (date.getMonth()+1 < 10 ? "0"+(date.getMonth()+1) : date.getMonth()+1));
-	var lastMonth = Number(date.getFullYear() + "" + (date.getMonth() === 0 ? 12 : (date.getMonth() < 10 ? "0"+date.getMonth() : date.getMonth())));
+	var thisMonth = Number(date.getFullYear() + "" + (date.getMonth()+1 < 10 ? "0" : "")+date.getMonth()+1);
+	var lastMonth = Number((date.getFullYear()-(date.getMonth()===0 ? 1 : 0)) + "" + (date.getMonth() === 0 ? 12 : (date.getMonth() < 10 ? "0" : "")+date.getMonth()));
+	var prevMonth = Number((date.getFullYear()-((date.getMonth()===0)||(date.getMonth()===1) ? 1 : 0)) + "" + ((date.getMonth() === 0) ? 11 : (date.getMonth() === 1 ? 12 : (date.getMonth()-1 < 10 ? "0" : ""))+date.getMonth()-1));
 	
 	var allTime;
 	
@@ -417,6 +418,8 @@ function loadKillboards() {
 					this_month_losses: (data.months ? (data.months[thisMonth] ? (data.months[thisMonth].shipsLost ? data.months[thisMonth].shipsLost : 0) : 0) : 0),
 					last_month_kills: (data.months ? (data.months[lastMonth] ? (data.months[lastMonth].shipsDestroyed ? data.months[lastMonth].shipsDestroyed : 0) : 0) : 0),
 					last_month_losses: (data.months ? (data.months[lastMonth] ? (data.months[lastMonth].shipsLost ? data.months[lastMonth].shipsLost : 0) : 0) : 0),
+					prev_month_kills: (data.months ? (data.months[prevMonth] ? (data.months[prevMonth].shipsDestroyed ? data.months[prevMonth].shipsDestroyed : 0) : 0) : 0),
+					prev_month_losses: (data.months ? (data.months[prevMonth] ? (data.months[prevMonth].shipsLost ? data.months[prevMonth].shipsLost : 0) : 0) : 0),
 				};
 	
 	kbdata.push(temp);
@@ -465,6 +468,7 @@ function showKillboard() {
 							"<td>" + kbdata[i].all_time + "</td>" +
 							"<td>" + kbdata[i].this_month_kills + "/" + kbdata[i].this_month_losses + "</td>" +
 							"<td>" + kbdata[i].last_month_kills + "/" + kbdata[i].last_month_losses + "</td>" +
+							"<td>" + kbdata[i].prev_month_kills + "/" + kbdata[i].prev_month_losses + "</td>" +
 						"</tr>"
 	}
 	
