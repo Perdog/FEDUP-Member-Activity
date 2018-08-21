@@ -391,9 +391,9 @@ function loadKillboards() {
 		member = member[0];
 	
 	var date = new Date();
-	var thisMonth = Number(date.getFullYear() + "" + (date.getMonth()+1 < 10 ? "0" : "")+date.getMonth()+1);
+	var thisMonth = Number(date.getFullYear() + "" + (date.getMonth()+1 < 10 ? "0" : "")+(date.getMonth()+1));
 	var lastMonth = Number((date.getFullYear()-(date.getMonth()===0 ? 1 : 0)) + "" + (date.getMonth() === 0 ? 12 : (date.getMonth() < 10 ? "0" : "")+date.getMonth()));
-	var prevMonth = Number((date.getFullYear()-((date.getMonth()===0)||(date.getMonth()===1) ? 1 : 0)) + "" + ((date.getMonth() === 0) ? 11 : (date.getMonth() === 1 ? 12 : (date.getMonth()-1 < 10 ? "0" : ""))+date.getMonth()-1));
+	var prevMonth = Number((date.getFullYear()-((date.getMonth()===0)||(date.getMonth()===1) ? 1 : 0)) + "" + ((date.getMonth() === 0) ? 11 : (date.getMonth() === 1 ? 12 : (date.getMonth()-1 < 10 ? "0" : ""))+(date.getMonth()-1)));
 	
 	var allTime;
 	
@@ -665,6 +665,9 @@ $(function() {
 				sorter: 'months'
 			},
 			6: {
+				sorter: 'months'
+			},
+			7: {
 				sorter: 'months'
 			}
 		}
