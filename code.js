@@ -12,48 +12,12 @@ var notesList = {};
 var purgeState = {
 	Default: "",
 	Stasis: "rgb(128, 128, 0)",
-	Dnp: "rgb(128, 0, 0)",
 	Purged: "rgb(0, 128, 0)",
+	Dnp: "rgb(128, 0, 0)",
 };
 
 var cMenu = $('#contextmenu');
 var clickedID = "";
-
-$('tbody').on("click", "tr", function(e) {
-	var id = this.id.slice(3);
-	
-	switch ($(this).css('background-color')) {
-		case purgeState.Dnp:
-			$("#in-"+id).css('background-color', '');
-			$("#kb-"+id).css('background-color', '');
-			dnpList.splice(dnpList.indexOf(id), 1);
-			break;
-		case purgeState.Purged:
-			$("#kb-"+id).css('background-color', purgeState.Dnp);
-			$("#in-"+id).css('background-color', purgeState.Dnp);
-			purgedList.splice(purgedList.indexOf(id), 1);
-			dnpList.push(id);
-			break;
-		case purgeState.Stasis:
-			$("#kb-"+id).css('background-color', purgeState.Purged);
-			$("#in-"+id).css('background-color', purgeState.Purged);
-			stasisList.splice(stasisList.indexOf(id), 1);
-			purgedList.push(id);
-			break;
-		case purgeState.Default:
-			console.log("Probably shouldn't ever see this");
-			break;
-		default:
-			$("#kb-"+id).css('background-color', purgeState.Stasis);
-			$("#in-"+id).css('background-color', purgeState.Stasis);
-			stasisList.push(id);
-			break;
-	}
-	
-	localStorage.stasis = JSON.stringify(stasisList);
-	localStorage.purged = JSON.stringify(purgedList);
-	localStorage.dnp = JSON.stringify(dnpList);
-});
 
 $('tbody').on("contextmenu", "tr", function(e) {
 	clickedID = this.id.slice(3);
@@ -66,6 +30,33 @@ $('tbody').on("contextmenu", "tr", function(e) {
 		$('#note-add').show();
 		$('#note-edit').hide();
 		$('#note-remove').hide();
+	}
+	
+	switch ($(this).css('background-color')) {
+		case purgeState.Stasis:
+			$('#cm-reset').show();
+			$('#cm-yellow').hide();
+			$('#cm-green').show();
+			$('#cm-red').show();
+			break;
+		case purgeState.Purged:
+			$('#cm-reset').show();
+			$('#cm-yellow').show();
+			$('#cm-green').hide();
+			$('#cm-red').show();
+			break;
+		case purgeState.Dnp:
+			$('#cm-reset').show();
+			$('#cm-yellow').show();
+			$('#cm-green').show();
+			$('#cm-red').hide();
+			break;
+		default:
+			$('#cm-reset').hide();
+			$('#cm-yellow').show();
+			$('#cm-green').show();
+			$('#cm-red').show();
+			break;
 	}
 	
 	var posY = e.clientY;
@@ -98,6 +89,43 @@ function removeNote() {
 	localStorage.notes = JSON.stringify(notesList);
 	$('#in-' + clickedID).find('.has-note').hide();
 	$('#kb-' + clickedID).find('.has-note').hide();
+}
+
+function setColour(colour) {
+	var id = clickedID;
+	
+	if (stasisList.indexOf(id) >= 0)
+		stasisList.splice(stasisList.indexOf(id), 1);
+	if (purgedList.indexOf(id) >= 0)
+		purgedList.splice(purgedList.indexOf(id), 1);
+	if (dnpList.indexOf(id) >= 0)
+		dnpList.splice(dnpList.indexOf(id), 1);
+	
+	switch (colour) {
+		case "reset":
+			$("#in-"+id).css('background-color', '');
+			$("#kb-"+id).css('background-color', '');
+			break;
+		case "yellow":
+			$("#kb-"+id).css('background-color', purgeState.Stasis);
+			$("#in-"+id).css('background-color', purgeState.Stasis);
+			stasisList.push(id);
+			break;
+		case "green":
+			$("#kb-"+id).css('background-color', purgeState.Purged);
+			$("#in-"+id).css('background-color', purgeState.Purged);
+			purgedList.push(id);
+			break;
+		case "red":
+			$("#kb-"+id).css('background-color', purgeState.Dnp);
+			$("#in-"+id).css('background-color', purgeState.Dnp);
+			dnpList.push(id);
+			break;
+	}
+	
+	localStorage.stasis = JSON.stringify(stasisList);
+	localStorage.purged = JSON.stringify(purgedList);
+	localStorage.dnp = JSON.stringify(dnpList);
 }
 
 $(document).on("click", function(e) {
