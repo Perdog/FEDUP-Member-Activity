@@ -326,6 +326,9 @@ function loadMemberIDs() {
 		return;
 	}
 	$('#nav-tabs').tabs("option", "active", 1);
+	data.forEach(d => {
+		list.push({"id":d});
+	});
 	allIDs = data;
 	lookupKillboards();
 }
@@ -403,7 +406,6 @@ function loadKillboards() {
 		corpKills.data = [{kills: 0}];
 	} else {
 		corpKills = corpKills[1];
-		
 		allTime = corpKills.data.filter(e => e.corporationID == data.info.corporationID);
 	}
 	
@@ -459,9 +461,17 @@ function showKillboard() {
 		$('#kbh-join').hide();
 	}
 	
+	kbdata.forEach(d => {
+		var l = list.filter(e => e.id == d.id)[0];
+		l.name = d.name;
+	});
+	
 	for (var i = 0; i < kbdata.length; i++) {
-		killTable += 	"<tr id='kb-"+kbdata[i].name.replace(/ /gi, "-")+"'>" +
+		killTable += 	"<tr id=\"kb-"+mysql_real_escape_string(kbdata[i].name.replace(/ /gi, "-"))+"\">" +
 							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a><a target=\"_blank\" href=\"https://zkillboard.com/character/"+kbdata[i].id+"/\">" + kbdata[i].name + "</a></td>" +
+							"<td id='authed'>&#x274C;</td>" +
+							"<td id='discord'>&#x274C;</td>" +
+							"<td id='altmain'>?</td>" +
 							(loginData.has_roles ? ("<td>" + kbdata[i].purge + "</td>") : "") +
 							(loginData.has_roles ? ("<td data-date='"+kbdata[i].joined+"'>" + kbdata[i].joined.toString().substring(3,15) + "</td>") : "") +
 							(loginData.has_roles ? ("<td data-date='"+kbdata[i].last+"'>" + kbdata[i].last.toString().substring(3,15) + "</td>") : "") +
@@ -475,13 +485,14 @@ function showKillboard() {
 	$('#killboard-activity').find('tbody').append(killTable);
 	$('#killboard-activity').trigger("update");
 	assignBackgrounds(2);
+	authLookup();
 }
 
 function lookupCharIDs() {
 	var fetch = new XMLHttpRequest();
 	fetch.onload = loadCharIDs;
 	fetch.open('post', "https://esi.evetech.net/latest/universe/names/?datasource=tranquility", true);
-	fetch.send(JSON.stringify(purgeIDs));
+	fetch.send(JSON.stringify(allIDs));
 }
 
 function loadCharIDs() {
@@ -504,12 +515,15 @@ function loadCharIDs() {
     			return 0;
 	});
 	
-	for (var i = 0; i < data.length; i++) {
-		//list[data[i].id].name = data[i].name;
-		var m = list.filter(e => e.id == data[i].id)[0];
-		tableText += 	"<tr id='in-"+data[i].name.replace(/ /gi, "-")+"'>" + 
+	for (var i = 0; i < purgeIDs.length; i++) {
+		var m = list.filter(e => e.id == purgeIDs[i])[0];
+		var n = data.filter(e => e.id == purgeIDs[i])[0];
+		tableText += 	"<tr id=\"in-"+mysql_real_escape_string(n.name.replace(/ /gi, "-"))+"\">" + 
 							"<td>" + (i+1) + "</td>" +
-							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a>" + data[i].name + "</td>" +
+							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a>" + n.name + "</td>" +
+							"<td id='authed'>&#x274C;</td>" +
+							"<td id='discord'>&#x274C;</td>" +
+							"<td id='altmain'>?</td>" +
 							"<td data-date='"+m.joined+"'>" + m.joined.toString().substring(3,15) + "</td>" +
 							"<td data-date='"+m.last_on+"'>" + m.last_on.toString().substring(3,15) + "</td>" +
 							"<td data-date='"+m.last_on+"'>" + parseTimer(Date.now() - new Date(m.last_on), true) + "</td>" +
@@ -520,6 +534,53 @@ function loadCharIDs() {
 	$('#inactive-table').find('tbody').append(tableText);
 	$('#inactive-table').trigger("update");
 	assignBackgrounds(1);
+}
+
+function authLookup() {
+	var temp = [];
+	var temp2 = {};
+	list.forEach(t => {
+		temp.push(t.name);
+	});
+	temp2.charNames = temp;
+	var fetch = new XMLHttpRequest();
+	fetch.onload = authLoad;
+	fetch.open('post', "https://us-central1-member-activity-219820.cloudfunctions.net/getAuthedUsers", true);
+	fetch.send(JSON.stringify(temp2));
+}
+
+function authLoad() {
+	var data = JSON.parse(this.responseText);
+	
+	console.log("Auth query!");
+	console.log(list);
+	console.log(data);
+	var flip = true;
+	data.forEach(d => {
+		var inact = $("#in-"+mysql_real_escape_string(d.lookup_name.replace(/ /gi, "-")));
+		var kb = $("#kb-"+mysql_real_escape_string(d.lookup_name.replace(/ /gi, "-")));
+		
+		if (kb) {
+			kb.find("#authed").html("&#x2705;");
+			if (d.lookup_name == d.main_name)
+				kb.find('#altmain').html("Main");
+			else {
+				kb.find('#altmain').html("<a class='tool-tip'>Alt<span class='tool-tip-text'>"+d.main_name+"</span></a>");
+			}
+			if (d.discord_id)
+				kb.find('#discord').html("&#x2705;");
+		}
+		if (inact) {
+			inact.find("#authed").html("&#x2705;");
+			if (d.lookup_name == d.main_name)
+				inact.find('#altmain').html("Main");
+			else {
+				inact.find('#altmain').html("<a class='tool-tip'>Alt<span class='tool-tip-text'>"+d.main_name+"</span></a>");
+			}
+			if (d.discord_id)
+				inact.find('#discord').html("&#x2705;");
+		}
+	});
 }
 
 function assignBackgrounds(type) {
@@ -691,4 +752,27 @@ $(function() {
 	});
 });
 
-
+function mysql_real_escape_string (str) {
+    return str.replace(/[\0\x08\x09\x1a\n\r"'\\\%]/g, function (char) {
+        switch (char) {
+            case "\0":
+                return "\\0";
+            case "\x08":
+                return "\\b";
+            case "\x09":
+                return "\\t";
+            case "\x1a":
+                return "\\z";
+            case "\n":
+                return "\\n";
+            case "\r":
+                return "\\r";
+            case "\"":
+            case "'":
+            case "\\":
+            case "%":
+                return "\\"+char; // prepends a backslash to backslash, percent,
+                                  // and double/single quotes
+        }
+    });
+}
