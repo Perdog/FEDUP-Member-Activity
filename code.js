@@ -244,17 +244,12 @@ function charLoad() {
 	loginData.id = data.CharacterID;
 	// DEBUG
 	loginData.tokenExpires = data.ExpiresOn;
-	/*
-	var ex = new Date(data.expiresOn);
-	loginData.expires = Date.now() + ex;
-	*/
 	localStorage.loginData = JSON.stringify(loginData);
 	
 	var fetch = new XMLHttpRequest();
 	fetch.onload = fetchPublicLoad;
 	fetch.onerror = fetchPublicError;
 	fetch.open('get', "https://esi.evetech.net/latest/characters/" + loginData.id + "/?datasource=tranquility", true);
-	//fetch.setRequestHeader("Authorization", "Bearer " + token);
 	fetch.send();
 }
 
@@ -265,6 +260,7 @@ function charError(err) {
 
 function fetchPublicLoad() {
 	var data = JSON.parse(this.responseText);
+	console.log(data);
 	loginData.corp_id = data.corporation_id;
 	localStorage.loginData = JSON.stringify(loginData);
 	console.log("Retrived all data, reloading page");
@@ -571,6 +567,7 @@ function authLookup() {
 		temp.push(t.name);
 	});
 	temp2.charNames = temp;
+	temp2.whoCalled = loginData.name;
 	var fetch = new XMLHttpRequest();
 	fetch.onload = authLoad;
 	fetch.open('post', "https://us-central1-member-activity-219820.cloudfunctions.net/getAuthedUsers", true);
