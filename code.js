@@ -577,10 +577,6 @@ function authLookup() {
 function authLoad() {
 	var data = JSON.parse(this.responseText);
 	
-	console.log("Auth query!");
-	console.log(list);
-	console.log(data);
-	var flip = true;
 	data.forEach(d => {
 		var inact = $("#in-"+mysql_real_escape_string(d.lookup_name.replace(/ /gi, "-")));
 		var kb = $("#kb-"+mysql_real_escape_string(d.lookup_name.replace(/ /gi, "-")));
