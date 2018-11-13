@@ -739,41 +739,59 @@ $(function() {
 		type: 'numeric'
 	});
 	
-	$('#killboard-activity').tablesorter({
-		headers: {
-			0: {
-				sorter: 'names'
-			},
-			2: {
-				sorter: 'dates'
-			},
-			3: {
-				sorter: 'dates'
-			},
-			5: {
-				sorter: 'months'
-			},
-			6: {
-				sorter: 'months'
-			},
-			7: {
-				sorter: 'months'
+	if (loginData.has_roles)
+		$('#killboard-activity').tablesorter({
+			headers: {
+				0: {
+					sorter: 'names'
+				},
+				5: {
+					sorter: 'dates'
+				},
+				6: {
+					sorter: 'dates'
+				},
+				8: {
+					sorter: 'months'
+				},
+				9: {
+					sorter: 'months'
+				},
+				10: {
+					sorter: 'months'
+				}
 			}
-		}
-	});
+		});
+	else
+		$('#killboard-activity').tablesorter({
+			headers: {
+				0: {
+					sorter: 'names'
+				},
+				5: {
+					sorter: 'months'
+				},
+				6: {
+					sorter: 'months'
+				},
+				7: {
+					sorter: 'months'
+				}
+			}
+		});
 	
 	$('#inactive-table').tablesorter({
 		headers: {
 			1: {
 				sorter: 'names'
 			},
-			2: {
+			5: {
 				sorter: 'dates'
 			},
-			3: {
+			6: {
 				sorter: 'dates'
 			},
-			4: {
+			7: {
 				sorter: 'dates'
 			}
 		}
