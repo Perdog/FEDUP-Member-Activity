@@ -12,48 +12,12 @@ var notesList = {};
 var purgeState = {
 	Default: "",
 	Stasis: "rgb(128, 128, 0)",
-	Dnp: "rgb(128, 0, 0)",
 	Purged: "rgb(0, 128, 0)",
+	Dnp: "rgb(128, 0, 0)",
 };
 
 var cMenu = $('#contextmenu');
 var clickedID = "";
-
-$('tbody').on("click", "tr", function(e) {
-	var id = this.id.slice(3);
-	
-	switch ($(this).css('background-color')) {
-		case purgeState.Dnp:
-			$("#in-"+id).css('background-color', '');
-			$("#kb-"+id).css('background-color', '');
-			dnpList.splice(dnpList.indexOf(id), 1);
-			break;
-		case purgeState.Purged:
-			$("#kb-"+id).css('background-color', purgeState.Dnp);
-			$("#in-"+id).css('background-color', purgeState.Dnp);
-			purgedList.splice(purgedList.indexOf(id), 1);
-			dnpList.push(id);
-			break;
-		case purgeState.Stasis:
-			$("#kb-"+id).css('background-color', purgeState.Purged);
-			$("#in-"+id).css('background-color', purgeState.Purged);
-			stasisList.splice(stasisList.indexOf(id), 1);
-			purgedList.push(id);
-			break;
-		case purgeState.Default:
-			console.log("Probably shouldn't ever see this");
-			break;
-		default:
-			$("#kb-"+id).css('background-color', purgeState.Stasis);
-			$("#in-"+id).css('background-color', purgeState.Stasis);
-			stasisList.push(id);
-			break;
-	}
-	
-	localStorage.stasis = JSON.stringify(stasisList);
-	localStorage.purged = JSON.stringify(purgedList);
-	localStorage.dnp = JSON.stringify(dnpList);
-});
 
 $('tbody').on("contextmenu", "tr", function(e) {
 	clickedID = this.id.slice(3);
@@ -66,6 +30,33 @@ $('tbody').on("contextmenu", "tr", function(e) {
 		$('#note-add').show();
 		$('#note-edit').hide();
 		$('#note-remove').hide();
+	}
+	
+	switch ($(this).css('background-color')) {
+		case purgeState.Stasis:
+			$('#cm-reset').show();
+			$('#cm-yellow').hide();
+			$('#cm-green').show();
+			$('#cm-red').show();
+			break;
+		case purgeState.Purged:
+			$('#cm-reset').show();
+			$('#cm-yellow').show();
+			$('#cm-green').hide();
+			$('#cm-red').show();
+			break;
+		case purgeState.Dnp:
+			$('#cm-reset').show();
+			$('#cm-yellow').show();
+			$('#cm-green').show();
+			$('#cm-red').hide();
+			break;
+		default:
+			$('#cm-reset').hide();
+			$('#cm-yellow').show();
+			$('#cm-green').show();
+			$('#cm-red').show();
+			break;
 	}
 	
 	var posY = e.clientY;
@@ -98,6 +89,43 @@ function removeNote() {
 	localStorage.notes = JSON.stringify(notesList);
 	$('#in-' + clickedID).find('.has-note').hide();
 	$('#kb-' + clickedID).find('.has-note').hide();
+}
+
+function setColour(colour) {
+	var id = clickedID;
+	
+	if (stasisList.indexOf(id) >= 0)
+		stasisList.splice(stasisList.indexOf(id), 1);
+	if (purgedList.indexOf(id) >= 0)
+		purgedList.splice(purgedList.indexOf(id), 1);
+	if (dnpList.indexOf(id) >= 0)
+		dnpList.splice(dnpList.indexOf(id), 1);
+	
+	switch (colour) {
+		case "reset":
+			$("#in-"+id).css('background-color', '');
+			$("#kb-"+id).css('background-color', '');
+			break;
+		case "yellow":
+			$("#kb-"+id).css('background-color', purgeState.Stasis);
+			$("#in-"+id).css('background-color', purgeState.Stasis);
+			stasisList.push(id);
+			break;
+		case "green":
+			$("#kb-"+id).css('background-color', purgeState.Purged);
+			$("#in-"+id).css('background-color', purgeState.Purged);
+			purgedList.push(id);
+			break;
+		case "red":
+			$("#kb-"+id).css('background-color', purgeState.Dnp);
+			$("#in-"+id).css('background-color', purgeState.Dnp);
+			dnpList.push(id);
+			break;
+	}
+	
+	localStorage.stasis = JSON.stringify(stasisList);
+	localStorage.purged = JSON.stringify(purgedList);
+	localStorage.dnp = JSON.stringify(dnpList);
 }
 
 $(document).on("click", function(e) {
@@ -216,17 +244,12 @@ function charLoad() {
 	loginData.id = data.CharacterID;
 	// DEBUG
 	loginData.tokenExpires = data.ExpiresOn;
-	/*
-	var ex = new Date(data.expiresOn);
-	loginData.expires = Date.now() + ex;
-	*/
 	localStorage.loginData = JSON.stringify(loginData);
 	
 	var fetch = new XMLHttpRequest();
 	fetch.onload = fetchPublicLoad;
 	fetch.onerror = fetchPublicError;
 	fetch.open('get', "https://esi.evetech.net/latest/characters/" + loginData.id + "/?datasource=tranquility", true);
-	//fetch.setRequestHeader("Authorization", "Bearer " + token);
 	fetch.send();
 }
 
@@ -237,6 +260,7 @@ function charError(err) {
 
 function fetchPublicLoad() {
 	var data = JSON.parse(this.responseText);
+	console.log(data);
 	loginData.corp_id = data.corporation_id;
 	localStorage.loginData = JSON.stringify(loginData);
 	console.log("Retrived all data, reloading page");
@@ -326,6 +350,9 @@ function loadMemberIDs() {
 		return;
 	}
 	$('#nav-tabs').tabs("option", "active", 1);
+	data.forEach(d => {
+		list.push({"id":d});
+	});
 	allIDs = data;
 	lookupKillboards();
 }
@@ -403,7 +430,6 @@ function loadKillboards() {
 		corpKills.data = [{kills: 0}];
 	} else {
 		corpKills = corpKills[1];
-		
 		allTime = corpKills.data.filter(e => e.corporationID == data.info.corporationID);
 	}
 	
@@ -459,9 +485,17 @@ function showKillboard() {
 		$('#kbh-join').hide();
 	}
 	
+	kbdata.forEach(d => {
+		var l = list.filter(e => e.id == d.id)[0];
+		l.name = d.name;
+	});
+	
 	for (var i = 0; i < kbdata.length; i++) {
-		killTable += 	"<tr id='kb-"+kbdata[i].name.replace(/ /gi, "-")+"'>" +
+		killTable += 	"<tr id=\"kb-"+mysql_real_escape_string(kbdata[i].name.replace(/ /gi, "-"))+"\">" +
 							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a><a target=\"_blank\" href=\"https://zkillboard.com/character/"+kbdata[i].id+"/\">" + kbdata[i].name + "</a></td>" +
+							"<td id='authed'>&#x274C;</td>" +
+							"<td id='discord'>&#x274C;</td>" +
+							"<td id='altmain'>?</td>" +
 							(loginData.has_roles ? ("<td>" + kbdata[i].purge + "</td>") : "") +
 							(loginData.has_roles ? ("<td data-date='"+kbdata[i].joined+"'>" + kbdata[i].joined.toString().substring(3,15) + "</td>") : "") +
 							(loginData.has_roles ? ("<td data-date='"+kbdata[i].last+"'>" + kbdata[i].last.toString().substring(3,15) + "</td>") : "") +
@@ -475,13 +509,14 @@ function showKillboard() {
 	$('#killboard-activity').find('tbody').append(killTable);
 	$('#killboard-activity').trigger("update");
 	assignBackgrounds(2);
+	authLookup();
 }
 
 function lookupCharIDs() {
 	var fetch = new XMLHttpRequest();
 	fetch.onload = loadCharIDs;
 	fetch.open('post', "https://esi.evetech.net/latest/universe/names/?datasource=tranquility", true);
-	fetch.send(JSON.stringify(purgeIDs));
+	fetch.send(JSON.stringify(allIDs));
 }
 
 function loadCharIDs() {
@@ -504,12 +539,15 @@ function loadCharIDs() {
     			return 0;
 	});
 	
-	for (var i = 0; i < data.length; i++) {
-		//list[data[i].id].name = data[i].name;
-		var m = list.filter(e => e.id == data[i].id)[0];
-		tableText += 	"<tr id='in-"+data[i].name.replace(/ /gi, "-")+"'>" + 
+	for (var i = 0; i < purgeIDs.length; i++) {
+		var m = list.filter(e => e.id == purgeIDs[i])[0];
+		var n = data.filter(e => e.id == purgeIDs[i])[0];
+		tableText += 	"<tr id=\"in-"+mysql_real_escape_string(n.name.replace(/ /gi, "-"))+"\">" + 
 							"<td>" + (i+1) + "</td>" +
-							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a>" + data[i].name + "</td>" +
+							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a>" + n.name + "</td>" +
+							"<td id='authed'>&#x274C;</td>" +
+							"<td id='discord'>&#x274C;</td>" +
+							"<td id='altmain'>?</td>" +
 							"<td data-date='"+m.joined+"'>" + m.joined.toString().substring(3,15) + "</td>" +
 							"<td data-date='"+m.last_on+"'>" + m.last_on.toString().substring(3,15) + "</td>" +
 							"<td data-date='"+m.last_on+"'>" + parseTimer(Date.now() - new Date(m.last_on), true) + "</td>" +
@@ -520,6 +558,50 @@ function loadCharIDs() {
 	$('#inactive-table').find('tbody').append(tableText);
 	$('#inactive-table').trigger("update");
 	assignBackgrounds(1);
+}
+
+function authLookup() {
+	var temp = [];
+	var temp2 = {};
+	list.forEach(t => {
+		temp.push(t.name);
+	});
+	temp2.charNames = temp;
+	temp2.whoCalled = loginData.name;
+	var fetch = new XMLHttpRequest();
+	fetch.onload = authLoad;
+	fetch.open('post', "https://us-central1-member-activity-219820.cloudfunctions.net/getAuthedUsers", true);
+	fetch.send(JSON.stringify(temp2));
+}
+
+function authLoad() {
+	var data = JSON.parse(this.responseText);
+	
+	data.forEach(d => {
+		var inact = $("#in-"+mysql_real_escape_string(d.lookup_name.replace(/ /gi, "-")));
+		var kb = $("#kb-"+mysql_real_escape_string(d.lookup_name.replace(/ /gi, "-")));
+		
+		if (kb) {
+			kb.find("#authed").html("&#x2705;");
+			if (d.lookup_name == d.main_name)
+				kb.find('#altmain').html("Main");
+			else {
+				kb.find('#altmain').html("<a class='tool-tip'>Alt<span class='tool-tip-text'>"+d.main_name+"</span></a>");
+			}
+			if (d.discord_id)
+				kb.find('#discord').html("&#x2705;");
+		}
+		if (inact) {
+			inact.find("#authed").html("&#x2705;");
+			if (d.lookup_name == d.main_name)
+				inact.find('#altmain').html("Main");
+			else {
+				inact.find('#altmain').html("<a class='tool-tip'>Alt<span class='tool-tip-text'>"+d.main_name+"</span></a>");
+			}
+			if (d.discord_id)
+				inact.find('#discord').html("&#x2705;");
+		}
+	});
 }
 
 function assignBackgrounds(type) {
@@ -650,45 +732,86 @@ $(function() {
 		type: 'numeric'
 	});
 	
-	$('#killboard-activity').tablesorter({
-		headers: {
-			0: {
-				sorter: 'names'
-			},
-			2: {
-				sorter: 'dates'
-			},
-			3: {
-				sorter: 'dates'
-			},
-			5: {
-				sorter: 'months'
-			},
-			6: {
-				sorter: 'months'
-			},
-			7: {
-				sorter: 'months'
+	if (loginData.has_roles)
+		$('#killboard-activity').tablesorter({
+			headers: {
+				0: {
+					sorter: 'names'
+				},
+				5: {
+					sorter: 'dates'
+				},
+				6: {
+					sorter: 'dates'
+				},
+				8: {
+					sorter: 'months'
+				},
+				9: {
+					sorter: 'months'
+				},
+				10: {
+					sorter: 'months'
+				}
 			}
-		}
-	});
+		});
+	else
+		$('#killboard-activity').tablesorter({
+			headers: {
+				0: {
+					sorter: 'names'
+				},
+				5: {
+					sorter: 'months'
+				},
+				6: {
+					sorter: 'months'
+				},
+				7: {
+					sorter: 'months'
+				}
+			}
+		});
 	
 	$('#inactive-table').tablesorter({
 		headers: {
 			1: {
 				sorter: 'names'
 			},
-			2: {
+			5: {
 				sorter: 'dates'
 			},
-			3: {
+			6: {
 				sorter: 'dates'
 			},
-			4: {
+			7: {
 				sorter: 'dates'
 			}
 		}
 	});
 });
 
-
+function mysql_real_escape_string (str) {
+    return str.replace(/[\0\x08\x09\x1a\n\r"'\\\%]/g, function (char) {
+        switch (char) {
+            case "\0":
+                return "\\0";
+            case "\x08":
+                return "\\b";
+            case "\x09":
+                return "\\t";
+            case "\x1a":
+                return "\\z";
+            case "\n":
+                return "\\n";
+            case "\r":
+                return "\\r";
+            case "\"":
+            case "'":
+            case "\\":
+            case "%":
+                return "\\"+char; // prepends a backslash to backslash, percent,
+                                  // and double/single quotes
+        }
+    });
+}
