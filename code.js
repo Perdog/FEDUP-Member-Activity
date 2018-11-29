@@ -726,6 +726,20 @@ $(function() {
 		},
 		format: function(s, table, cell) {
 			var str = s.split("/");
+			console.log(s + "\n"+cell);
+			switch(str[1].length) {
+				case 1:
+					str[1] = "000".concat(str[1]);
+					break;
+				case 2:
+					str[1] = "00".concat(str[1]);
+					break;
+				case 3:
+					str[1] = "0".concat(str[1]);
+					break;
+				default:
+					break;
+			}
 			var n = Number.parseFloat(str[0]+"."+str[1]);
 			return n;
 		},
