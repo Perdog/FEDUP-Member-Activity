@@ -492,10 +492,13 @@ function showKillboard() {
 	
 	for (var i = 0; i < kbdata.length; i++) {
 		killTable += 	"<tr id=\"kb-"+mysql_real_escape_string(kbdata[i].name.replace(/ /gi, "-"))+"\">" +
-							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a><a target=\"_blank\" href=\"https://zkillboard.com/character/"+kbdata[i].id+"/\">" + kbdata[i].name + "</a></td>" +
+							"<td id='char-name'><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span id='note-text' class='tool-tip-text'></span></a><a target=\"_blank\" href=\"https://zkillboard.com/character/"+kbdata[i].id+"/\">" + kbdata[i].name + "</a></td>" +
 							"<td id='authed'>&#x274C;</td>" +
 							"<td id='discord'>&#x274C;</td>" +
-							"<td id='altmain'>?</td>" +
+							"<td id='altmain'>" +
+								"<a class='tool-tip'><img src='./imgs/warning.png' style='width:20px;height:20px;' class='dynamic-content has-warning' /><span id='warn-text' class='tool-tip-text'></span></a>"+
+								"<a id='inner' class='tool-tip'>?</a>" +
+							"</td>" +
 							(loginData.has_roles ? ("<td>" + kbdata[i].purge + "</td>") : "") +
 							(loginData.has_roles ? ("<td data-date='"+kbdata[i].joined+"'>" + kbdata[i].joined.toString().substring(3,15) + "</td>") : "") +
 							(loginData.has_roles ? ("<td data-date='"+kbdata[i].last+"'>" + kbdata[i].last.toString().substring(3,15) + "</td>") : "") +
@@ -547,7 +550,10 @@ function loadCharIDs() {
 							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a>" + n.name + "</td>" +
 							"<td id='authed'>&#x274C;</td>" +
 							"<td id='discord'>&#x274C;</td>" +
-							"<td id='altmain'>?</td>" +
+							"<td id='altmain'>" +
+								"<a class='tool-tip'><img src='./imgs/warning.png' style='width:20px;height:20px;' class='dynamic-content has-warning' /><span id='warn-text' class='tool-tip-text'></span></a>"+
+								"<a id='inner' class='tool-tip'>?</a>" +
+							"</td>" +
 							"<td data-date='"+m.joined+"'>" + m.joined.toString().substring(3,15) + "</td>" +
 							"<td data-date='"+m.last_on+"'>" + m.last_on.toString().substring(3,15) + "</td>" +
 							"<td data-date='"+m.last_on+"'>" + parseTimer(Date.now() - new Date(m.last_on), true) + "</td>" +
@@ -576,7 +582,7 @@ function authLookup() {
 
 function authLoad() {
 	var data = JSON.parse(this.responseText);
-	
+	console.log(data);
 	data.forEach(d => {
 		var inact = $("#in-"+mysql_real_escape_string(d.lookup_name.replace(/ /gi, "-")));
 		var kb = $("#kb-"+mysql_real_escape_string(d.lookup_name.replace(/ /gi, "-")));
@@ -586,7 +592,17 @@ function authLoad() {
 			if (d.lookup_name == d.main_name)
 				kb.find('#altmain').html("Main");
 			else {
-				kb.find('#altmain').html("<a class='tool-tip'>Alt<span class='tool-tip-text'>"+d.main_name+"</span></a>");
+				if (d.alli_tick != "FEDUP") {
+					kb.find('.has-warning').show();
+					kb.find('#warn-text').html("Main not in FEDUP");
+					kb.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+" {"+d.alli_tick+"}["+d.corp_tick+"]"+"</span>");
+				} else if (d.corp_id != loginData.corp_id) {
+					kb.find('.has-warning').show();
+					kb.find('#warn-text').html("Main is in " + d.corp_name);
+					kb.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+" ["+d.corp_tick+"]"+"</span>");
+				} else {
+					kb.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+"</span>");
+				}
 			}
 			if (d.discord_id)
 				kb.find('#discord').html("&#x2705;");
@@ -596,7 +612,17 @@ function authLoad() {
 			if (d.lookup_name == d.main_name)
 				inact.find('#altmain').html("Main");
 			else {
-				inact.find('#altmain').html("<a class='tool-tip'>Alt<span class='tool-tip-text'>"+d.main_name+"</span></a>");
+				if (d.alli_tick != "FEDUP") {
+					inact.find('.has-warning').show();
+					inact.find('#warn-text').html("Main not in FEDUP");
+					inact.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+" {"+d.alli_tick+"}["+d.corp_tick+"]"+"</span>");
+				} else if (d.corp_id != loginData.corp_id) {
+					inact.find('.has-warning').show();
+					inact.find('#warn-text').html("Main is in " + d.corp_name);
+					inact.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+" ["+d.corp_tick+"]"+"</span>");
+				} else {
+					inact.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+"</span>");
+				}
 			}
 			if (d.discord_id)
 				inact.find('#discord').html("&#x2705;");
@@ -726,7 +752,6 @@ $(function() {
 		},
 		format: function(s, table, cell) {
 			var str = s.split("/");
-			console.log(s + "\n"+cell);
 			switch(str[1].length) {
 				case 1:
 					str[1] = "000".concat(str[1]);
@@ -746,7 +771,7 @@ $(function() {
 		type: 'numeric'
 	});
 	
-	if (loginData.has_roles)
+	if (loginData && loginData.has_roles) {
 		$('#killboard-activity').tablesorter({
 			headers: {
 				0: {
@@ -769,7 +794,8 @@ $(function() {
 				}
 			}
 		});
-	else
+	}
+	else {
 		$('#killboard-activity').tablesorter({
 			headers: {
 				0: {
@@ -786,6 +812,7 @@ $(function() {
 				}
 			}
 		});
+	}
 	
 	$('#inactive-table').tablesorter({
 		headers: {
