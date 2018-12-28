@@ -1,8 +1,8 @@
 var loginData = null;
 var allIDs = [];
-var purgeIDs = [];
 var list = [];
 var kbdata = [];
+var fullWallet = [];
 
 var stasisList = [];
 var purgedList = [];
@@ -289,6 +289,7 @@ function rolesLoad() {
 	}
 	
 	loginData.has_roles = data.roles.includes("Director");
+	loginData.accountant_roles = data.roles.includes("Junior_Accountant") || data.roles.includes("Accountant");
 	localStorage.loginData = JSON.stringify(loginData);
 	
 	// Track if character is a director to make life easier later on.
@@ -382,15 +383,12 @@ function loadInactiveMembers() {
 		var toPurge = (lastLogin < cutoff);
 		
 		allIDs.push(json[key].character_id);
-		if (toPurge)
-			purgeIDs.push(json[key].character_id);
 		
 		var temp = {"id": json[key].character_id, "purge": toPurge, "last_on": lastLogin, "joined": joined};
 		list.push(temp);
 	}
 	
 	lookupKillboards();
-	lookupCharIDs();
 }
 
 function lookupKillboards() {
@@ -447,7 +445,7 @@ function loadKillboards() {
 					prev_month_kills: (data.months ? (data.months[prevMonth] ? (data.months[prevMonth].shipsDestroyed ? data.months[prevMonth].shipsDestroyed : 0) : 0) : 0),
 					prev_month_losses: (data.months ? (data.months[prevMonth] ? (data.months[prevMonth].shipsLost ? data.months[prevMonth].shipsLost : 0) : 0) : 0),
 				};
-	
+	member.name = temp.name;
 	kbdata.push(temp);
 	
 	statsLoaded++;
@@ -485,11 +483,6 @@ function showKillboard() {
 		$('#kbh-join').hide();
 	}
 	
-	kbdata.forEach(d => {
-		var l = list.filter(e => e.id == d.id)[0];
-		l.name = d.name;
-	});
-	
 	for (var i = 0; i < kbdata.length; i++) {
 		killTable += 	"<tr id=\"kb-"+mysql_real_escape_string(kbdata[i].name.replace(/ /gi, "-"))+"\">" +
 							"<td id='char-name'><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span id='note-text' class='tool-tip-text'></span></a><a target=\"_blank\" href=\"https://zkillboard.com/character/"+kbdata[i].id+"/\">" + kbdata[i].name + "</a></td>" +
@@ -502,6 +495,9 @@ function showKillboard() {
 							(loginData.has_roles ? ("<td>" + kbdata[i].purge + "</td>") : "") +
 							(loginData.has_roles ? ("<td data-date='"+kbdata[i].joined+"'>" + kbdata[i].joined.toString().substring(3,15) + "</td>") : "") +
 							(loginData.has_roles ? ("<td data-date='"+kbdata[i].last+"'>" + kbdata[i].last.toString().substring(3,15) + "</td>") : "") +
+							(loginData.accountant_roles ? "<td id='bounty'>" +
+																"<a class='tool-tip'>0<span id='bounty-text' class='tool-tip-text'>No bounties received</span></a>" +
+															"</td>" : "") +
 							"<td>" + kbdata[i].all_time + "</td>" +
 							"<td>" + kbdata[i].this_month_kills + "/" + kbdata[i].this_month_losses + "</td>" +
 							"<td>" + kbdata[i].last_month_kills + "/" + kbdata[i].last_month_losses + "</td>" +
@@ -512,42 +508,19 @@ function showKillboard() {
 	$('#killboard-activity').find('tbody').append(killTable);
 	$('#killboard-activity').trigger("update");
 	assignBackgrounds(2);
-	authLookup();
+	showPurgeTable();
+	if (loginData.accountant_roles)
+		loadBounties();
 }
 
-function lookupCharIDs() {
-	var fetch = new XMLHttpRequest();
-	fetch.onload = loadCharIDs;
-	fetch.open('post', "https://esi.evetech.net/latest/universe/names/?datasource=tranquility", true);
-	fetch.send(JSON.stringify(allIDs));
-}
-
-function loadCharIDs() {
-	var data = JSON.parse(this.responseText);
+function showPurgeTable() {
 	var tableText = "";
 	
-	if (data.error) {
-		console.log(data.error);
-		return;
-	}
-	
-	data.sort(function(a,b) {
-		var aName = a.name.toLowerCase();
-		var bName = b.name.toLowerCase();
-		if (aName > bName)
-    			return 1;
-    		if (aName < bName)
-    			return -1;
-    		else
-    			return 0;
-	});
-	
-	for (var i = 0; i < purgeIDs.length; i++) {
-		var m = list.filter(e => e.id == purgeIDs[i])[0];
-		var n = data.filter(e => e.id == purgeIDs[i])[0];
-		tableText += 	"<tr id=\"in-"+mysql_real_escape_string(n.name.replace(/ /gi, "-"))+"\">" + 
+	var purgeList = list.filter(e => e.purge);
+	purgeList.forEach(function (m) {
+		tableText += 	"<tr id=\"in-"+mysql_real_escape_string(m.name.replace(/ /gi, "-"))+"\">" + 
 							"<td>" + (i+1) + "</td>" +
-							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a>" + n.name + "</td>" +
+							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a>" + m.name + "</td>" +
 							"<td id='authed'>&#x274C;</td>" +
 							"<td id='discord'>&#x274C;</td>" +
 							"<td id='altmain'>" +
@@ -558,12 +531,13 @@ function loadCharIDs() {
 							"<td data-date='"+m.last_on+"'>" + m.last_on.toString().substring(3,15) + "</td>" +
 							"<td data-date='"+m.last_on+"'>" + parseTimer(Date.now() - new Date(m.last_on), true) + "</td>" +
 						"</tr>";
-	}
+	});
 	
 	$('#purge-tab').show();
 	$('#inactive-table').find('tbody').append(tableText);
 	$('#inactive-table').trigger("update");
 	assignBackgrounds(1);
+	authLookup();
 }
 
 function authLookup() {
@@ -582,7 +556,6 @@ function authLookup() {
 
 function authLoad() {
 	var data = JSON.parse(this.responseText);
-	console.log(data);
 	data.forEach(d => {
 		var inact = $("#in-"+mysql_real_escape_string(d.lookup_name.replace(/ /gi, "-")));
 		var kb = $("#kb-"+mysql_real_escape_string(d.lookup_name.replace(/ /gi, "-")));
@@ -627,6 +600,99 @@ function authLoad() {
 			if (d.discord_id)
 				inact.find('#discord').html("&#x2705;");
 		}
+	});
+}
+
+var transTypes = [];
+function loadBounties(page = 1) {
+	var pages;
+	
+	if (page == 1)
+		fullWallet = [];
+	fetch("https://esi.evetech.net/latest/corporations/"+loginData.corp_id+"/wallets/1/journal/?page="+page+"&datasource=tranquility",
+	{
+		headers: {
+			"Authorization": "Bearer " + loginData.token
+		}
+	})
+	.then(function(response) {
+		pages = response.headers.get("x-pages");
+		return response.json();
+	})
+	.then(function(trans) {
+		if (trans.error) {
+			console.log("Couldn't load wallet data.");
+			return;
+		}
+		// Only keep entries that involve a tax
+		var temp = trans.filter(entry => entry.tax);
+		fullWallet.push(...temp);
+		temp.forEach(function(t) {
+			if (!transTypes.includes(t.ref_type))
+				transTypes.push(t.ref_type);
+		});
+		
+		// If current page number is less then max pages, keep loading them.
+		if (page < pages)
+			loadBounties(page+1);
+		// Otherwise bulk process the data.
+		else {
+			// Now we need to split the bounties up based on who got them.... thankfully we have 'list' already
+			fullWallet.forEach(function(transaction) {
+				var member = list.filter(e => e.id == transaction.second_party_id)[0];
+				
+				if (!member)
+					return;
+				
+				if (!member.bounties) {
+					member.bounties = {};
+					member.bounties.total = function() {return this.player_bounty + this.rat_bounty + this.mission_bounty};
+					member.bounties.player_bounty = 0;
+					member.bounties.rat_bounty = 0;
+					member.bounties.mission_bounty = 0;
+					member.bounties.total_c = function() {return this.player_bounty_c + this.rat_bounty_c + this.mission_bounty_c};
+					member.bounties.player_bounty_c = 0;
+					member.bounties.rat_bounty_c = 0;
+					member.bounties.mission_bounty_c = 0;
+				}
+				
+				var rew = transaction.tax;
+				switch(transaction.ref_type) {
+					case "bounty_prize":
+						// Player bounty
+						member.bounties.player_bounty += rew;
+						member.bounties.player_bounty_c++;
+						break;
+					case "bounty_prizes":
+						// Rat bounty
+						member.bounties.rat_bounty += rew;
+						member.bounties.rat_bounty_c++;
+						break;
+					case "agent_mission_reward":
+					case "agent_mission_time_bonus_reward":
+						// Mission payouts
+						member.bounties.mission_bounty += rew;
+						member.bounties.mission_bounty_c++;
+						break;
+					default:
+						console.log("You should not be seeing this!");
+						break;
+				}
+			});
+			
+			list.forEach(function(member) {
+				if (!member.bounties)
+					return;
+				
+				var row = $('#kb-'+mysql_real_escape_string(member.name.replace(/ /gi, "-")));
+				row.find('#bounty').html("<a class='tool-tip'>"+member.bounties.total().toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})+" ISK<span id='bounty-text' class='tool-tip-text'>" +
+					"<p>Ratting: " + member.bounties.rat_bounty.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " ISK</p>" +
+					"<p>Player: " + member.bounties.player_bounty.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " ISK</p>" +
+					"<p>Missions: " + member.bounties.mission_bounty.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " ISK</p>" +
+				"</span></a>");
+			});
+		}
+		$('#killboard-activity').trigger("update");
 	});
 }
 
@@ -771,6 +837,20 @@ $(function() {
 		type: 'numeric'
 	});
 	
+	$.tablesorter.addParser(
+	{
+		id: 'bounty',
+		is: function(s) {
+			return false;
+		},
+		format: function(s, table, cell) {
+			var str = s.split(" ISK");
+			var n = Number.parseFloat(str[0].replace(/,/gi, ""));
+			return n;
+		},
+		type: 'numeric'
+	});
+	
 	if (loginData && loginData.has_roles) {
 		$('#killboard-activity').tablesorter({
 			headers: {
@@ -783,19 +863,41 @@ $(function() {
 				6: {
 					sorter: 'dates'
 				},
-				8: {
-					sorter: 'months'
+				7: {
+					sorter: 'bounty'
 				},
 				9: {
 					sorter: 'months'
 				},
 				10: {
 					sorter: 'months'
+				},
+				11: {
+					sorter: 'months'
 				}
 			}
 		});
-	}
-	else {
+	} else if (loginData && loginData.accountant_roles) {
+		$('#killboard-activity').tablesorter({
+			headers: {
+				0: {
+					sorter: 'names'
+				},
+				4: {
+					sorter: 'bounty'
+				},
+				6: {
+					sorter: 'months'
+				},
+				7: {
+					sorter: 'months'
+				},
+				8: {
+					sorter: 'months'
+				}
+			}
+		});
+	} else {
 		$('#killboard-activity').tablesorter({
 			headers: {
 				0: {
