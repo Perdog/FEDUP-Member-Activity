@@ -420,16 +420,14 @@ function loadKillboards() {
 	var lastMonth = Number((date.getFullYear()-(date.getMonth()===0 ? 1 : 0)) + "" + (date.getMonth() === 0 ? 12 : (date.getMonth() < 10 ? "0" : "")+date.getMonth()));
 	var prevMonth = Number((date.getFullYear()-((date.getMonth()===0)||(date.getMonth()===1) ? 1 : 0)) + "" + ((date.getMonth() === 0) ? 11 : (date.getMonth() === 1 ? 12 : (date.getMonth()-1 < 10 ? "0" : ""))+(date.getMonth()-1)));
 	
-	var allTime;
-	
-	var corpKills = data.topAllTime;
+	var corpKills = data.topAllTime[1];
 	if (!corpKills) {
-		corpKills = {};
-		corpKills.data = [{kills: 0}];
-	} else {
-		corpKills = corpKills[1];
-		allTime = corpKills.data.filter(e => e.corporationID == data.info.corporationID);
+		corpKills = data.topLists[1];
 	}
+	
+	var allTime = (corpKills.data ? corpKills.data.filter(e => e.corporationID == data.info.corporationID) : corpKills.values.filter(e => e.corporationID == data.info.corporationID));
+	
+	var atk = atKills(allTime);
 	
 	var temp = 	{
 					id: id,
@@ -437,7 +435,7 @@ function loadKillboards() {
 					purge: (member ? (member.purge ? "Yes" : "") : ""),
 					joined: (member ? member.joined : ""),
 					last: (member ? member.last_on : ""),
-					all_time: (allTime && allTime[0] && allTime[0].kills ? allTime[0].kills : 0),
+					all_time: atk,
 					this_month_kills: (data.months ? (data.months[thisMonth] ? (data.months[thisMonth].shipsDestroyed ? data.months[thisMonth].shipsDestroyed : 0) : 0) : 0),
 					this_month_losses: (data.months ? (data.months[thisMonth] ? (data.months[thisMonth].shipsLost ? data.months[thisMonth].shipsLost : 0) : 0) : 0),
 					last_month_kills: (data.months ? (data.months[lastMonth] ? (data.months[lastMonth].shipsDestroyed ? data.months[lastMonth].shipsDestroyed : 0) : 0) : 0),
@@ -451,6 +449,16 @@ function loadKillboards() {
 	statsLoaded++;
 	if (statsLoaded === allIDs.length)
 		showKillboard();
+}
+
+function atKills(arr) {
+	var i = 0;
+	
+	arr.forEach(function(e) {
+		i += e.kills;
+	});
+	
+	return i;
 }
 
 function showKillboard() {
