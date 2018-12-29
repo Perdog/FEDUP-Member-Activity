@@ -519,12 +519,14 @@ function showKillboard() {
 	
 	$('#killboard-activity').find('tbody').append(killTable);
 	$('#killboard-activity').trigger("update");
-	if (loginData.has_roles)
-		$('#killboard-activity').trigger("sorton", [[[9,0],[8,0],[0,0]]]);
-	else if (loginData.accountant_roles)
-		$('#killboard-activity').trigger("sorton", [[[6,0],[5,0],[0,0]]]);
-	else
-		$('#killboard-activity').trigger("sorton", [[[5,0],[4,0],[0,0]]]);
+	setTimeout(function(){
+		if (loginData.has_roles)
+			$('#killboard-activity').trigger("sorton", [[[9,0],[8,0],[0,0]]]);
+		else if (loginData.accountant_roles)
+			$('#killboard-activity').trigger("sorton", [[[6,0],[5,0],[0,0]]]);
+		else
+			$('#killboard-activity').trigger("sorton", [[[5,0],[4,0],[0,0]]]);
+	}, 100);
 	assignBackgrounds(2);
 	showPurgeTable();
 	if (loginData.accountant_roles)
