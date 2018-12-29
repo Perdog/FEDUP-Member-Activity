@@ -519,6 +519,12 @@ function showKillboard() {
 	
 	$('#killboard-activity').find('tbody').append(killTable);
 	$('#killboard-activity').trigger("update");
+	if (loginData.has_roles)
+		$('#killboard-activity').trigger("sorton", [[[9,0],[8,0],[0,0]]]);
+	else if (loginData.accountant_roles)
+		$('#killboard-activity').trigger("sorton", [[[6,0],[5,0],[0,0]]]);
+	else
+		$('#killboard-activity').trigger("sorton", [[[5,0],[4,0],[0,0]]]);
 	assignBackgrounds(2);
 	showPurgeTable();
 	if (loginData.accountant_roles)
@@ -802,7 +808,6 @@ function loadTitles() {
 			var member = list.filter(e => e.id == m.character_id)[0];
 			
 			if (!member.name) {
-				console.log("Failed to find member",m);
 				return;
 			}
 			
@@ -840,7 +845,6 @@ function loadTitles() {
 				});
 				
 				if (activeStasis) {
-					console.log(secs);
 					kb.find('.has-warning').show();
 					kb.find('#warn-text').html("Corp stasis active for another " + parseTimer(86400000-secs));
 					inact.find('.has-warning').show();
@@ -1030,8 +1034,7 @@ $(function() {
 				11: {
 					sorter: 'months'
 				}
-			},
-			sortList: [[9,0],[8,0],[0,0]]
+			}
 		});
 	} else if (loginData && loginData.accountant_roles) {
 		$('#killboard-activity').tablesorter({
@@ -1051,8 +1054,7 @@ $(function() {
 				8: {
 					sorter: 'months'
 				}
-			},
-			sortList: [[6,0],[5,0],[0,0]]
+			}
 		});
 	} else {
 		$('#killboard-activity').tablesorter({
@@ -1069,8 +1071,7 @@ $(function() {
 				7: {
 					sorter: 'months'
 				}
-			},
-			sortList: [[4,0],[5,0],[0,0]]
+			}
 		});
 	}
 	
@@ -1088,8 +1089,7 @@ $(function() {
 			7: {
 				sorter: 'dates'
 			}
-		},
-			sortList: [[0,0]]
+		}
 	});
 });
 
