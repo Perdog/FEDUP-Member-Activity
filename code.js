@@ -420,10 +420,11 @@ function loadKillboards() {
 	var lastMonth = Number((date.getFullYear()-(date.getMonth()===0 ? 1 : 0)) + "" + (date.getMonth() === 0 ? 12 : (date.getMonth() < 10 ? "0" : "")+date.getMonth()));
 	var prevMonth = Number((date.getFullYear()-((date.getMonth()===0)||(date.getMonth()===1) ? 1 : 0)) + "" + ((date.getMonth() === 0) ? 11 : (date.getMonth() === 1 ? 12 : (date.getMonth()-1 < 10 ? "0" : ""))+(date.getMonth()-1)));
 	
-	var corpKills = data.topAllTime[1];
+	var corpKills = data.topAllTime;
 	if (!corpKills) {
-		corpKills = data.topLists[1];
+		corpKills = data.topLists;
 	}
+	corpKills = corpKills[1];
 	
 	var allTime = (corpKills.data ? corpKills.data.filter(e => e.corporationID == data.info.corporationID) : corpKills.values.filter(e => e.corporationID == data.info.corporationID));
 	
