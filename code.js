@@ -499,6 +499,9 @@ function showKillboard() {
 							"<td id='discord'>&#x274C;</td>" +
 							"<td id='altmain'>" +
 								"<a class='tool-tip'><img src='./imgs/warning.png' style='width:20px;height:20px;' class='dynamic-content has-warning' /><span id='warn-text' class='tool-tip-text'></span></a>"+
+								
+								"<a class='tool-tip'><img src='./imgs/alert.png' style='width:20px;height:20px;' class='dynamic-content has-alert' /><span id='alert-text' class='tool-tip-text'></span></a>"+
+								
 								"<a id='inner' class='tool-tip'>?</a>" +
 							"</td>" +
 							(loginData.has_roles ? ("<td>" + kbdata[i].purge + "</td>") : "") +
@@ -534,6 +537,9 @@ function showPurgeTable() {
 							"<td id='discord'>&#x274C;</td>" +
 							"<td id='altmain'>" +
 								"<a class='tool-tip'><img src='./imgs/warning.png' style='width:20px;height:20px;' class='dynamic-content has-warning' /><span id='warn-text' class='tool-tip-text'></span></a>"+
+								
+								"<a class='tool-tip'><img src='./imgs/alert.png' style='width:20px;height:20px;' class='dynamic-content has-alert' /><span id='alert-text' class='tool-tip-text'></span></a>"+
+								
 								"<a id='inner' class='tool-tip'>?</a>" +
 							"</td>" +
 							"<td data-date='"+m.joined+"'>" + m.joined.toString().substring(3,15) + "</td>" +
@@ -575,12 +581,12 @@ function authLoad() {
 				kb.find('#altmain').html("Main");
 			else {
 				if (d.alli_tick != "FEDUP") {
-					kb.find('.has-warning').show();
-					kb.find('#warn-text').html("Main not in FEDUP");
+					kb.find('.has-alert').show();
+					kb.find('#alert-text').html("Main not in FEDUP");
 					kb.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+" {"+d.alli_tick+"}["+d.corp_tick+"]"+"</span>");
 				} else if (d.corp_id != loginData.corp_id) {
-					kb.find('.has-warning').show();
-					kb.find('#warn-text').html("Main is in " + d.corp_name);
+					kb.find('.has-alert').show();
+					kb.find('#alert-text').html("Main is in " + d.corp_name);
 					kb.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+" ["+d.corp_tick+"]"+"</span>");
 				} else {
 					kb.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+"</span>");
@@ -595,12 +601,12 @@ function authLoad() {
 				inact.find('#altmain').html("Main");
 			else {
 				if (d.alli_tick != "FEDUP") {
-					inact.find('.has-warning').show();
-					inact.find('#warn-text').html("Main not in FEDUP");
+					inact.find('.has-alert').show();
+					inact.find('#alert-text').html("Main not in FEDUP");
 					inact.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+" {"+d.alli_tick+"}["+d.corp_tick+"]"+"</span>");
 				} else if (d.corp_id != loginData.corp_id) {
-					inact.find('.has-warning').show();
-					inact.find('#warn-text').html("Main is in " + d.corp_name);
+					inact.find('.has-alert').show();
+					inact.find('#alert-text').html("Main is in " + d.corp_name);
 					inact.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+" ["+d.corp_tick+"]"+"</span>");
 				} else {
 					inact.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+"</span>");
@@ -612,7 +618,6 @@ function authLoad() {
 	});
 }
 
-var transTypes = [];
 function loadBounties(page = 1) {
 	var pages;
 	
@@ -636,10 +641,6 @@ function loadBounties(page = 1) {
 		// Only keep entries that involve a tax
 		var temp = trans.filter(entry => entry.tax);
 		fullWallet.push(...temp);
-		temp.forEach(function(t) {
-			if (!transTypes.includes(t.ref_type))
-				transTypes.push(t.ref_type);
-		});
 		
 		// If current page number is less then max pages, keep loading them.
 		if (page < pages)
@@ -700,8 +701,153 @@ function loadBounties(page = 1) {
 					"<p>Missions: " + member.bounties.mission_bounty.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " ISK</p>" +
 				"</span></a>");
 			});
+			$('#killboard-activity').trigger("update");
+			if (loginData.has_roles)
+				loadMemberTitles();
 		}
-		$('#killboard-activity').trigger("update");
+	});
+}
+
+function loadMemberTitles(page = 1) {
+	var pages;
+	
+	if (page == 1)
+		memberTitles = [];
+	fetch("https://esi.evetech.net/latest/corporations/"+loginData.corp_id+"/members/titles/?datasource=tranquility",
+	{
+		headers: {
+			"Authorization": "Bearer " + loginData.token
+		}
+	})
+	.then(function(response) {
+		pages = response.headers.get("x-pages");
+		return response.json();
+	})
+	.then(function(tits) {
+		if (tits.error) {
+			console.log("Couldn't load member title data.");
+			return;
+		}
+		console.log("Member titles:", tits);
+		memberTitles.push(...tits);
+		
+		// If current page number is less then max pages, keep loading them.
+		if (page < pages)
+			loadTitles(page+1);
+		// Otherwise bulk process the data.
+		else {
+			loadRoleHistory();
+		}
+	});
+}
+
+function loadRoleHistory(page = 1) {
+	var pages;
+	
+	if (page == 1)
+		roleHistory = [];
+	fetch("https://esi.evetech.net/latest/corporations/"+loginData.corp_id+"/roles/history/?datasource=tranquility&page="+page,
+	{
+		headers: {
+			"Authorization": "Bearer " + loginData.token
+		}
+	})
+	.then(function(response) {
+		pages = response.headers.get("x-pages");
+		return response.json();
+	})
+	.then(function(hist) {
+		if (hist.error) {
+			console.log("Couldn't load role history data.");
+			return;
+		}
+		console.log("Role history:", hist);
+		roleHistory.push(...hist);
+		
+		// If current page number is less then max pages, keep loading them.
+		if (page < pages)
+			loadRoleHistory(page+1);
+		// Otherwise bulk process the data.
+		else {
+			loadTitles();
+		}
+	});
+}
+
+var memberTitles = [];
+var roleHistory = [];
+var corpTitles = [];
+function loadTitles() {
+	fetch("https://esi.evetech.net/latest/corporations/"+loginData.corp_id+"/titles/?datasource=tranquility",
+	{
+		headers: {
+			"Authorization": "Bearer " + loginData.token
+		}
+	})
+	.then(function(response) {
+		pages = response.headers.get("x-pages");
+		return response.json();
+	})
+	.then(function(tits) {
+		if (tits.error) {
+			console.log("Couldn't load corp title data.");
+			return;
+		}
+		console.log("Corp titles:", tits);
+		corpTitles = tits;
+	})
+	.then(function() {
+		// Do stuff with the data.
+		memberTitles.forEach(function(m) {
+			var member = list.filter(e => e.id == m.character_id)[0];
+			
+			if (!member.name) {
+				console.log("Failed to find member",m);
+				return;
+			}
+			
+			var hist = roleHistory.filter(e => e.character_id == m.character_id && e.new_roles.length == 0);
+			
+			var inact = $("#in-"+mysql_real_escape_string(member.name.replace(/ /gi, "-"))).find('#altmain');
+			var kb = $("#kb-"+mysql_real_escape_string(member.name.replace(/ /gi, "-"))).find('#altmain');
+			
+			if (m.titles.length > 0) {
+				var titList = "This character has the following titles:";
+				m.titles.forEach(function(e) {
+					var t = corpTitles.filter(f => f.title_id == e)[0];
+					titList += "<p>"+t.name+"</p>";
+				});
+				kb.find('.has-warning').show();
+				kb.find('#warn-text').html(titList);
+				inact.find('.has-warning').show();
+				inact.find('#warn-text').html(titList);
+			}
+			else if (hist.length > 0) {
+				var activeStasis = false;
+				var secs;
+				
+				hist.forEach(function(h) {
+					var d = Date.parse(h.changed_at);
+					var seconds = Math.floor((new Date() - d));
+					
+					if (seconds < 86400000) {
+						activeStasis = true;
+						if (!secs)
+							secs = seconds;
+						else if (seconds < secs)
+							secs = seconds;
+					}
+				});
+				
+				if (activeStasis) {
+					console.log(secs);
+					kb.find('.has-warning').show();
+					kb.find('#warn-text').html("Corp stasis active for another " + parseTimer(86400000-secs));
+					inact.find('.has-warning').show();
+					inact.find('#warn-text').html("Corp stasis active for another " + parseTimer(86400000-secs));
+				}
+			}
+		});
 	});
 }
 
