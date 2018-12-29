@@ -1030,7 +1030,8 @@ $(function() {
 				11: {
 					sorter: 'months'
 				}
-			}
+			},
+			sortList: [[9,0],[8,0],[0,0]]
 		});
 	} else if (loginData && loginData.accountant_roles) {
 		$('#killboard-activity').tablesorter({
@@ -1050,7 +1051,8 @@ $(function() {
 				8: {
 					sorter: 'months'
 				}
-			}
+			},
+			sortList: [[6,0],[5,0],[0,0]]
 		});
 	} else {
 		$('#killboard-activity').tablesorter({
@@ -1067,7 +1069,8 @@ $(function() {
 				7: {
 					sorter: 'months'
 				}
-			}
+			},
+			sortList: [[4,0],[5,0],[0,0]]
 		});
 	}
 	
@@ -1085,7 +1088,8 @@ $(function() {
 			7: {
 				sorter: 'dates'
 			}
-		}
+		},
+			sortList: [[0,0]]
 	});
 });
 
