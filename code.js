@@ -586,7 +586,7 @@ function authLoad() {
 		if (kb) {
 			kb.find("#authed").html("&#x2705;");
 			if (d.lookup_name == d.main_name)
-				kb.find('#altmain').html("Main");
+				kb.find('#altmain').find('#inner').html("Main");
 			else {
 				if (d.alli_tick != "FEDUP") {
 					kb.find('.has-alert').show();
@@ -606,7 +606,7 @@ function authLoad() {
 		if (inact) {
 			inact.find("#authed").html("&#x2705;");
 			if (d.lookup_name == d.main_name)
-				inact.find('#altmain').html("Main");
+				inact.find('#altmain').find('#inner').html("Main");
 			else {
 				if (d.alli_tick != "FEDUP") {
 					inact.find('.has-alert').show();
@@ -806,21 +806,21 @@ function loadTitles() {
 	})
 	.then(function() {
 		// Do stuff with the data.
-		memberTitles.forEach(function(m) {
-			var member = list.filter(e => e.id == m.character_id)[0];
+		memberTitles.forEach(function(mt) {
+			var member = list.filter(e => e.id == mt.character_id)[0];
 			
 			if (!member.name) {
 				return;
 			}
 			
-			var hist = roleHistory.filter(e => e.character_id == m.character_id && e.new_roles.length == 0);
+			var hist = roleHistory.filter(e => e.character_id == mt.character_id && e.new_roles.length == 0);
 			
 			var inact = $("#in-"+mysql_real_escape_string(member.name.replace(/ /gi, "-"))).find('#altmain');
 			var kb = $("#kb-"+mysql_real_escape_string(member.name.replace(/ /gi, "-"))).find('#altmain');
 			
-			if (m.titles.length > 0) {
+			if (mt.titles.length > 0) {
 				var titList = "This character has the following titles:";
-				m.titles.forEach(function(e) {
+				mt.titles.forEach(function(e) {
 					var t = corpTitles.filter(f => f.title_id == e)[0];
 					titList += "<p>"+t.name+"</p>";
 				});
