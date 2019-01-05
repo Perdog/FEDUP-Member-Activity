@@ -506,7 +506,7 @@ function showKillboard() {
 									"?" +
 									"<span class='tool-tip-text'>" +
 										"<p id='mainname'></p>" +
-										"<p id='titles'></p>" +
+										"<p id='titles'>This character has no titles</p>" +
 									"<span>" +
 								"</a>" +
 							"</td>" +
@@ -558,7 +558,7 @@ function showPurgeTable() {
 									"?" +
 									"<span class='tool-tip-text'>" +
 										"<p id='mainname'></p>" +
-										"<p id='titles'></p>" +
+										"<p id='titles'>This character has no titles</p>" +
 									"<span>" +
 								"</a>" +
 							"</td>" +
@@ -840,11 +840,9 @@ function loadTitles() {
 				var titList = "This character has the following titles:";
 				mt.titles.forEach(function(e) {
 					var t = corpTitles.filter(f => f.title_id == e)[0];
-					titList += "<p>"+t.name+"</p>";
+					titList += "<br />"+t.name;
 				});
-				//kb.find('.has-warning').show();
 				kb.find('#titles').html(titList);
-				//inact.find('.has-warning').show();
 				inact.find('#titles').html(titList);
 			}
 			else if (hist.length > 0) {
