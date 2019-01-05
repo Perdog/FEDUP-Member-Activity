@@ -502,7 +502,13 @@ function showKillboard() {
 								
 								"<a class='tool-tip'><img src='./imgs/alert.png' style='width:20px;height:20px;' class='dynamic-content has-alert' /><span id='alert-text' class='tool-tip-text'></span></a>"+
 								
-								"<a id='inner' class='tool-tip'>?</a>" +
+								"<a id='inner' class='tool-tip'>" +
+									"?" +
+									"<span class='tool-tip-text'>" +
+										"<p id='mainname'></p>" +
+										"<p id='titles'></p>" +
+									"<span>" +
+								"</a>" +
 							"</td>" +
 							(loginData.has_roles ? ("<td>" + kbdata[i].purge + "</td>") : "") +
 							(loginData.has_roles ? ("<td data-date='"+kbdata[i].joined+"'>" + kbdata[i].joined.toString().substring(3,15) + "</td>") : "") +
@@ -548,7 +554,13 @@ function showPurgeTable() {
 								
 								"<a class='tool-tip'><img src='./imgs/alert.png' style='width:20px;height:20px;' class='dynamic-content has-alert' /><span id='alert-text' class='tool-tip-text'></span></a>"+
 								
-								"<a id='inner' class='tool-tip'>?</a>" +
+								"<a id='inner' class='tool-tip'>" +
+									"?" +
+									"<span class='tool-tip-text'>" +
+										"<p id='mainname'></p>" +
+										"<p id='titles'></p>" +
+									"<span>" +
+								"</a>" +
 							"</td>" +
 							"<td data-date='"+m.joined+"'>" + m.joined.toString().substring(3,15) + "</td>" +
 							"<td data-date='"+m.last_on+"'>" + m.last_on.toString().substring(3,15) + "</td>" +
@@ -586,18 +598,21 @@ function authLoad() {
 		if (kb) {
 			kb.find("#authed").html("&#x2705;");
 			if (d.lookup_name == d.main_name)
-				kb.find('#altmain').find('#inner').html("Main");
+				kb.find('#altmain').find('#inner').contents()[0].data = "Main";
 			else {
 				if (d.alli_tick != "FEDUP") {
 					kb.find('.has-alert').show();
 					kb.find('#alert-text').html("Main not in FEDUP");
-					kb.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+" {"+d.alli_tick+"}["+d.corp_tick+"]"+"</span>");
+					kb.find('#altmain').find('#inner').contents()[0].data = "Alt";
+					kb.find('#altmain').find('#inner').find('#mainname').html(d.main_name+" {"+d.alli_tick+"}["+d.corp_tick+"]");
 				} else if (d.corp_id != loginData.corp_id) {
 					kb.find('.has-alert').show();
 					kb.find('#alert-text').html("Main is in " + d.corp_name);
-					kb.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+" ["+d.corp_tick+"]"+"</span>");
+					kb.find('#altmain').find('#inner').contents()[0].data = "Alt";
+					kb.find('#altmain').find('#inner').find('#mainname').html(d.main_name+" ["+d.corp_tick+"]");
 				} else {
-					kb.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+"</span>");
+					kb.find('#altmain').find('#inner').contents()[0].data = "Alt";
+					kb.find('#altmain').find('#inner').find('#mainname').html(d.main_name);
 				}
 			}
 			if (d.discord_id)
@@ -606,18 +621,21 @@ function authLoad() {
 		if (inact) {
 			inact.find("#authed").html("&#x2705;");
 			if (d.lookup_name == d.main_name)
-				inact.find('#altmain').find('#inner').html("Main");
+				inact.find('#altmain').find('#inner').contents()[0].data = "Main";
 			else {
 				if (d.alli_tick != "FEDUP") {
 					inact.find('.has-alert').show();
 					inact.find('#alert-text').html("Main not in FEDUP");
-					inact.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+" {"+d.alli_tick+"}["+d.corp_tick+"]"+"</span>");
+					inact.find('#altmain').find('#inner').contents()[0].data = "Alt";
+					inact.find('#altmain').find('#inner').find('#mainname').html(d.main_name+" {"+d.alli_tick+"}["+d.corp_tick+"]");
 				} else if (d.corp_id != loginData.corp_id) {
 					inact.find('.has-alert').show();
 					inact.find('#alert-text').html("Main is in " + d.corp_name);
-					inact.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+" ["+d.corp_tick+"]"+"</span>");
+					inact.find('#altmain').find('#inner').contents()[0].data = "Alt";
+					inact.find('#altmain').find('#inner').find('#mainname').html(d.main_name+" ["+d.corp_tick+"]");
 				} else {
-					inact.find('#altmain').find('#inner').html("Alt<span class='tool-tip-text'>"+d.main_name+"</span>");
+					inact.find('#altmain').find('#inner').contents()[0].data = "Alt";
+					inact.find('#altmain').find('#inner').find('#mainname').html(d.main_name);
 				}
 			}
 			if (d.discord_id)
@@ -824,10 +842,10 @@ function loadTitles() {
 					var t = corpTitles.filter(f => f.title_id == e)[0];
 					titList += "<p>"+t.name+"</p>";
 				});
-				kb.find('.has-warning').show();
-				kb.find('#warn-text').html(titList);
-				inact.find('.has-warning').show();
-				inact.find('#warn-text').html(titList);
+				//kb.find('.has-warning').show();
+				kb.find('#titles').html(titList);
+				//inact.find('.has-warning').show();
+				inact.find('#titles').html(titList);
 			}
 			else if (hist.length > 0) {
 				var activeStasis = false;
