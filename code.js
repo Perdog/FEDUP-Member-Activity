@@ -72,9 +72,9 @@ function saveNote() {
 	notesList[clickedID] = $('#toon-note').val();
 	$('#toon-note').val("");
 	$('#in-' + clickedID).find('.has-note').show();
-	$('#in-' + clickedID).find('.note-text').text(notesList[clickedID]);
+	$('#in-' + clickedID).find('#note-text').text(notesList[clickedID]);
 	$('#kb-' + clickedID).find('.has-note').show();
-	$('#kb-' + clickedID).find('.note-text').text(notesList[clickedID]);
+	$('#kb-' + clickedID).find('#note-text').text(notesList[clickedID]);
 	localStorage.notes = JSON.stringify(notesList);
 }
 
@@ -893,7 +893,7 @@ function assignBackgrounds(type) {
 	});
 	for (var e in notesList) {
 		$(prefix + e).find('.has-note').show();
-		$(prefix + e).find('.note-text').text(notesList[e]);
+		$(prefix + e).find('#note-text').text(notesList[e]);
 	};
 	
 }
