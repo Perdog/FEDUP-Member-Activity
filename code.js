@@ -546,7 +546,7 @@ function showPurgeTable() {
 	purgeList.forEach(function (m, i) {
 		tableText += 	"<tr id=\"in-"+mysql_real_escape_string(m.name.replace(/ /gi, "-"))+"\">" + 
 							"<td>" + (i+1) + "</td>" +
-							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span class='tool-tip-text'></span></a>" + m.name + "</td>" +
+							"<td><a class='tool-tip'><img src='./imgs/note.png' style='width:20px;height:20px;' class='dynamic-content has-note' /><span id='note-text' class='tool-tip-text'></span></a>" + m.name + "</td>" +
 							"<td id='authed'>&#x274C;</td>" +
 							"<td id='discord'>&#x274C;</td>" +
 							"<td id='altmain'>" +
